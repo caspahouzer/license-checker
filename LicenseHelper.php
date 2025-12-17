@@ -5,12 +5,12 @@
  *
  * Handles HTTP communication with the License Manager REST API.
  *
- * @package SLK\License_Checker
+ * @package SLK\LicenseChecker
  */
 
 declare(strict_types=1);
 
-namespace SLK\License_Checker;
+namespace SLK\LicenseChecker;
 
 // Exit if accessed directly.
 if (! defined('ABSPATH')) {
@@ -22,7 +22,7 @@ if (! defined('ABSPATH')) {
  * 
  * Provides methods for communicating with the License Manager for WooCommerce REST API.
  */
-class License_Helper
+class LicenseHelper
 {
     /**
      * API base URL.

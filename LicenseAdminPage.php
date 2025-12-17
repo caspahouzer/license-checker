@@ -5,12 +5,12 @@
  *
  * Handles admin interface rendering and form processing.
  *
- * @package SLK\License_Checker
+ * @package SLK\LicenseChecker
  */
 
 declare(strict_types=1);
 
-namespace SLK\License_Checker;
+namespace SLK\LicenseChecker;
 
 // Exit if accessed directly.
 if (! defined('ABSPATH')) {
@@ -22,7 +22,7 @@ if (! defined('ABSPATH')) {
  * 
  * Renders the license management interface and processes form submissions.
  */
-class License_Admin_Page
+class LicenseAdminPage
 {
     /**
      * Nonce action name.
@@ -66,7 +66,7 @@ class License_Admin_Page
         }
 
         // Get license data.
-        $manager = License_Checker::instance();
+        $manager = LicenseChecker::instance();
         $license_key = $manager->get_license_key();
         $activation_hash = $manager->get_activation_hash();
         $license_status = $manager->get_license_status();

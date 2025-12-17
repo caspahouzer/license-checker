@@ -5,12 +5,12 @@
  *
  * Handles license operations and data storage.
  *
- * @package SLK\License_Checker
+ * @package SLK\LicenseChecker
  */
 
 declare(strict_types=1);
 
-namespace SLK\License_Checker;
+namespace SLK\LicenseChecker;
 
 // Exit if accessed directly.
 if (! defined('ABSPATH')) {
@@ -24,14 +24,14 @@ define('SLK_LICENSE_CHECKER_VERSION', '1.0.0');
  * 
  * Singleton class for managing license operations.
  */
-class License_Checker
+class LicenseChecker
 {
     /**
      * Singleton instance.
      *
-     * @var License_Checker|null
+     * @var LicenseChecker|null
      */
-    private static ?License_Checker $instance = null;
+    private static ?LicenseChecker $instance = null;
 
     /**
      * WordPress option keys.
@@ -85,9 +85,9 @@ class License_Checker
     /**
      * Get singleton instance.
      *
-     * @return License_Checker
+     * @return LicenseChecker
      */
-    public static function instance(): License_Checker
+    public static function instance(): LicenseChecker
     {
         if (null === self::$instance) {
             self::$instance = new self();
@@ -107,7 +107,7 @@ class License_Checker
         self::log('Activating license', ['key_length' => strlen($license_key)]);
 
         // Call API.
-        $response = License_Helper::activate_license($license_key);
+        $response = LicenseHelper::activate_license($license_key);
 
         self::log('Activation API response', $response);
 
@@ -245,7 +245,7 @@ class License_Checker
         ]);
 
         // Call API.
-        $response = License_Helper::deactivate_license($license_key, $activation_hash);
+        $response = LicenseHelper::deactivate_license($license_key, $activation_hash);
 
         self::log('Deactivation API response', $response);
 
@@ -272,7 +272,7 @@ class License_Checker
             }
 
             // Clear license data.
-            License_Helper::delete_license_data();
+            LicenseHelper::delete_license_data();
 
             self::log('License deactivated, token deleted, transient cleared');
         } else {
@@ -304,7 +304,7 @@ class License_Checker
         }
 
         // Call API.
-        $response = License_Helper::validate_license($license_key, $activation_hash);
+        $response = LicenseHelper::validate_license($license_key, $activation_hash);
 
         self::log('Validation API response', $response);
 
@@ -577,7 +577,7 @@ class License_Checker
      */
     public function render_license_form(): void
     {
-        $admin_page = new License_Admin_Page();
+        $admin_page = new LicenseAdminPage();
         $admin_page->render();
     }
 

@@ -5,7 +5,7 @@
  *
  * This template is loaded by License_Admin_Page::render().
  *
- * @package SLK\License_Checker
+ * @package SLK\LicenseChecker
  * @var string $license_key       Current license key.
  * @var string $license_status    Current license status.
  * @var string $notice            Admin notice message.
@@ -38,7 +38,7 @@ if (! defined('ABSPATH')) {
     </div>
 
     <form method="post" action="" class="cpt-license-form" onsubmit="return false;">
-        <?php wp_nonce_field(\SLK\License_Checker\License_Admin_Page::NONCE_ACTION, \SLK\License_Checker\License_Admin_Page::NONCE_FIELD); ?>
+        <?php wp_nonce_field(\SLK\LicenseChecker\LicenseAdminPage::NONCE_ACTION, \SLK\LicenseChecker\LicenseAdminPage::NONCE_FIELD); ?>
 
         <table class="form-table" role="presentation">
             <tbody>
