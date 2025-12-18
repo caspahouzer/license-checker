@@ -183,7 +183,7 @@ class LicenseChecker
             $this->update_license_counts($details['data']);
         } else {
             // Otherwise, fetch details now to get the counts.
-            $details = License_Helper::get_license_details($license_key);
+            $details = LicenseHelper::get_license_details($license_key);
             if ($details['success'] && isset($details['data'])) {
                 $this->update_license_counts($details['data']);
             }
@@ -324,7 +324,7 @@ class LicenseChecker
             $has_counts = isset($response['data']['timesActivated']) || isset($response['data']['data']['timesActivated']);
 
             if (!$has_counts) {
-                $details = License_Helper::get_license_details($license_key);
+                $details = LicenseHelper::get_license_details($license_key);
                 if ($details['success'] && isset($details['data'])) {
                     $this->update_license_counts($details['data']);
                 }
@@ -452,7 +452,7 @@ class LicenseChecker
 
         wp_enqueue_script(
             'slk-license-checker',
-            CPT_TABLE_ENGINE_URL . 'modules/license-checker/assets/js/license-checker.js',
+            CPT_TABLE_ENGINE_URL . 'modules/LicenseChecker/assets/js/license-checker.js',
             ['jquery'],
             CPT_TABLE_ENGINE_VERSION,
             true

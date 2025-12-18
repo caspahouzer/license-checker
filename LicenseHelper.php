@@ -121,11 +121,11 @@ class LicenseHelper
 
     public static function delete_license_data(): void
     {
-        delete_option(License_Checker::OPTION_LICENSE_KEY);
-        delete_option(License_Checker::OPTION_ACTIVATION_HASH);
-        delete_option(License_Checker::OPTION_LICENSE_STATUS);
-        delete_option(License_Checker::OPTION_LICENSE_COUNTS);
-        delete_transient(License_Checker::TRANSIENT_LICENSE_VALIDATION);
+        delete_option(LicenseChecker::OPTION_LICENSE_KEY);
+        delete_option(LicenseChecker::OPTION_ACTIVATION_HASH);
+        delete_option(LicenseChecker::OPTION_LICENSE_STATUS);
+        delete_option(LicenseChecker::OPTION_LICENSE_COUNTS);
+        delete_transient(LicenseChecker::TRANSIENT_LICENSE_VALIDATION);
 
         self::log('License data deleted');
     }
