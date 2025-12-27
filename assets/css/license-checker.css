@@ -1,0 +1,108 @@
+:root {
+    --slk-primary-color: #007cba;
+    --slk-secondary-color: #f0f0f1;
+    --slk-success-color: #46b450;
+    --slk-error-color: #dc3232;
+    --slk-warning-color: #ffb900;
+    --slk-text-color: #2c3338;
+    --slk-border-color: #ccd0d4;
+    --slk-white-color: #ffffff;
+    --slk-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+
+.slk-license-page {
+    max-width: 800px;
+    margin-top: 20px;
+    font-family: var(--slk-font-family);
+}
+
+.slk-license-card {
+    background: var(--slk-white-color);
+    border: 1px solid var(--slk-border-color);
+    border-radius: 4px;
+    padding: 25px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .04);
+}
+
+.slk-license-card h1 {
+    font-size: 24px;
+    color: var(--slk-text-color);
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.slk-form-group {
+    margin-bottom: 20px;
+}
+
+.slk-form-group label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.slk-input-group {
+    display: flex;
+    gap: 10px;
+}
+
+.slk-input-group input[type="text"] {
+    flex: 1;
+    padding: 10px;
+    font-size: 14px;
+    border-radius: 4px;
+    border: 1px solid var(--slk-border-color);
+}
+
+.slk-input-group input[type="text"]:disabled {
+    background-color: var(--slk-secondary-color);
+    cursor: not-allowed;
+}
+
+.slk-license-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.slk-status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.slk-status-indicator.active {
+    background-color: var(--slk-success-color);
+}
+
+.slk-status-indicator.inactive {
+    background-color: var(--slk-border-color);
+}
+
+.slk-status-indicator.invalid {
+    background-color: var(--slk-error-color);
+}
+
+.slk-license-usage {
+    font-weight: 600;
+}
+
+.slk-help-section {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--slk-border-color);
+}
+
+.slk-help-section h2 {
+    font-size: 20px;
+    margin-bottom: 15px;
+}
+
+.slk-help-section ul {
+    list-style: disc;
+    margin-left: 20px;
+}
+
+.slk-help-section li {
+    margin-bottom: 15px;
+}

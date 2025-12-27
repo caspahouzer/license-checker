@@ -554,14 +554,21 @@ class LicenseChecker
     {
         // Only load on our settings page.
         $screen = get_current_screen();
-        $expected_screen_id = str_replace('_', '-', $this->option_prefix);
-        if (!str_contains($screen->id, $expected_screen_id)) {
+        $expected_screen_id = $this->get_admin_menu_slug();
+        if (!$screen || !str_contains($screen->id, $expected_screen_id)) {
             return;
         }
 
+        wp_enqueue_style(
+            'slk-license-checker',
+            plugin_dir_url(__FILE__) . 'assets/css/license-checker.css',
+            [],
+            SLK_LICENSE_CHECKER_VERSION
+        );
+
         wp_enqueue_script(
             'slk-license-checker',
-            SLK_LICENSE_CHECKER_URL . 'modules/LicenseChecker/assets/js/license-checker.js',
+            plugin_dir_url(__FILE__) . 'assets/js/license-checker.js',
             ['jquery'],
             SLK_LICENSE_CHECKER_VERSION,
             true
@@ -573,11 +580,11 @@ class LicenseChecker
             'status'   => $this->get_license_status(),
             'domain'   => parse_url(home_url(), PHP_URL_HOST),
             'strings'  => [
-                'enter_key'         => __('Please enter a license key.', 'slk-license-checker'),
-                'confirm_deactivate' => __('Are you sure you want to deactivate this license?', 'slk-license-checker'),
-                'network_error'     => __('Network error. Please try again.', 'slk-license-checker'),
-                'active_desc'       => __('Your license is active. Click "Deactivate" to change or remove the license.', 'slk-license-checker'),
-                'inactive_desc'     => __('Enter the license key you received after purchase.', 'slk-license-checker'),
+                'enter_key'         => __('Please enter a license key.', $this->text_domain),
+                'confirm_deactivate' => __('Are you sure you want to deactivate this license?', $this->text_domain),
+                'network_error'     => __('Network error. Please try again.', $this->text_domain),
+                'active_desc'       => __('Your license is active. Click "Deactivate" to change or remove the license.', $this->text_domain),
+                'inactive_desc'     => __('Enter the license key you received after purchase.', $this->text_domain),
             ],
         ]);
     }
