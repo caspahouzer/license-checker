@@ -20,7 +20,7 @@ if (! defined('ABSPATH')) {
 ?>
 <div class="wrap slk-license-page">
     <div class="slk-license-card">
-        <h1><?php esc_html_e('License Management', 'slk-license-manager'); ?></h1>
+        <h1><?php esc_html_e('License Management', 'slk-license-checker'); ?></h1>
 
         <!-- Message Container for AJAX -->
         <div id="slk-license-message" style="display: none; margin-bottom: 15px;"></div>
@@ -29,7 +29,7 @@ if (! defined('ABSPATH')) {
             <?php wp_nonce_field(\SLK\LicenseChecker\LicenseAdminPage::NONCE_ACTION, \SLK\LicenseChecker\LicenseAdminPage::NONCE_FIELD); ?>
 
             <div class="slk-form-group">
-                <label for="license_key"><?php esc_html_e('License Key', 'slk-license-manager'); ?></label>
+                <label for="license_key"><?php esc_html_e('License Key', 'slk-license-checker'); ?></label>
                 <div class="slk-input-group">
                     <?php
                     $is_active = ($license_status === 'active');
@@ -39,39 +39,40 @@ if (! defined('ABSPATH')) {
                         $display_key = ($key_length > 8) ? substr($license_key, 0, 4) . str_repeat('&#9679;', $key_length - 8) . substr($license_key, -4) : str_repeat('&#9679;', $key_length);
                     }
                     ?>
-                    <input type="text" id="license_key" name="license_key" class="regular-text" value="<?php echo esc_attr($display_key); ?>" placeholder="<?php esc_attr_e('Enter your license key', 'slk-license-manager'); ?>" <?php echo $is_active ? 'readonly disabled' : ''; ?> />
-                    <button type="button" id="slk-activate-btn" class="button button-primary" style="<?php echo $is_active ? 'display: none;' : ''; ?>"><?php esc_html_e('Activate', 'slk-license-manager'); ?></button>
-                    <button type="button" id="slk-deactivate-btn" class="button" style="<?php echo $is_active ? '' : 'display: none;'; ?>"><?php esc_html_e('Deactivate', 'slk-license-manager'); ?></button>
+                    <input type="text" id="license_key" name="license_key" class="regular-text" value="<?php echo esc_attr($display_key); ?>" placeholder="<?php esc_attr_e('Enter your license key', 'slk-license-checker'); ?>" <?php echo $is_active ? 'readonly disabled' : ''; ?> />
+                    <button type="button" id="slk-activate-btn" class="button button-primary" style="<?php echo $is_active ? 'display: none;' : ''; ?>"><?php esc_html_e('Activate', 'slk-license-checker'); ?></button>
+                    <button type="button" id="slk-deactivate-btn" class="button" style="<?php echo $is_active ? '' : 'display: none;'; ?>"><?php esc_html_e('Deactivate', 'slk-license-checker'); ?></button>
                     <span class="spinner slk-spinner"></span>
                 </div>
             </div>
 
             <div class="slk-form-group">
-                <label><?php esc_html_e('Status', 'slk-license-manager'); ?></label>
+                <label><?php esc_html_e('Status', 'slk-license-checker'); ?></label>
                 <div class="slk-license-status">
                     <?php
                     $status_class = 'inactive';
-                    $status_text = __('Inactive', 'slk-license-manager');
+                    $status_text = __('Inactive', 'slk-license-checker');
                     if ($license_status === 'active') {
                         $status_class = 'active';
-                        $status_text = __('Active', 'slk-license-manager');
+                        $status_text = __('Active', 'slk-license-checker');
                     } elseif ($license_status === 'invalid') {
                         $status_class = 'invalid';
-                        $status_text = __('Invalid', 'slk-license-manager');
+                        $status_text = __('Invalid', 'slk-license-checker');
                     }
                     ?>
                     <span class="slk-status-indicator <?php echo esc_attr($status_class); ?>"></span>
-                    <span><?php echo esc_html($status_text); ?></span>
+                    <span class="slk-license-status-text"><?php echo esc_html($status_text); ?></span>
                 </div>
             </div>
 
             <div class="slk-form-group" style="<?php echo ($license_status === 'active') ? '' : 'display: none;'; ?>">
-                <label><?php esc_html_e('Activations', 'slk-license-manager'); ?></label>
+                <label><?php esc_html_e('Activations', 'slk-license-checker'); ?></label>
                 <div class="slk-license-usage">
                     <?php
-                    $usage_text = 'N/A';
+                    $usage_text = esc_html__('N/A', 'slk-license-checker');
                     if ($license_counts && isset($license_counts['activated'], $license_counts['limit'])) {
-                        $usage_text = sprintf('%d / %d', $license_counts['activated'], $license_counts['limit']);
+                        /* translators: %1$d: number of activated sites, %2$d: total license limit */
+                        $usage_text = sprintf(esc_html__('%1$d / %2$d', 'slk-license-checker'), $license_counts['activated'], $license_counts['limit']);
                     }
                     echo esc_html($usage_text);
                     ?>
@@ -81,10 +82,10 @@ if (! defined('ABSPATH')) {
     </div>
 
     <div class="slk-help-section slk-license-card">
-        <h2><?php esc_html_e('Need Help?', 'slk-license-manager'); ?></h2>
+        <h2><?php esc_html_e('Need Help?', 'slk-license-checker'); ?></h2>
         <ul>
-            <li><strong><?php esc_html_e('Where can I find my license key?', 'slk-license-manager'); ?></strong><br /><?php printf(esc_html__('Your license key is available in your account on our %s.', 'slk-license-manager'), '<a href="#" target="_blank">website</a>'); ?></li>
-            <li><strong><?php esc_html_e('Having trouble?', 'slk-license-manager'); ?></strong><br /><?php printf(esc_html__('Please contact our %s for assistance.', 'slk-license-manager'), '<a href="#" target="_blank">support team</a>'); ?></li>
+            <li><strong><?php esc_html_e('Where can I find my license key?', 'slk-license-checker'); ?></strong><br /><?php printf(esc_html__('Your license key is available in your account on our %s.', 'slk-license-checker'), '<a href="#" target="_blank">website</a>'); ?></li>
+            <li><strong><?php esc_html_e('Having trouble?', 'slk-license-checker'); ?></strong><br /><?php printf(esc_html__('Please contact our %s for assistance.', 'slk-license-checker'), '<a href="#" target="_blank">support team</a>'); ?></li>
         </ul>
     </div>
 </div>

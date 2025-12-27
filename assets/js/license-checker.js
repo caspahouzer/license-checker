@@ -58,7 +58,7 @@ jQuery(document).ready(function ($) {
                     $licenseInput.val(response.data.masked_key).prop('readonly', true).prop('disabled', true).css('background-color', '#f0f0f1');
                     $activateBtn.hide();
                     $deactivateBtn.show();
-                    $('.slk-license-status-text').text('active').removeClass('slk-status-inactive').addClass('slk-status-active');
+                    $('.slk-license-status-text').text(slk_license_vars.strings.active).removeClass('slk-status-inactive').addClass('slk-status-active');
                     $('.slk-license-status-icon').removeClass('dashicons-minus').addClass('dashicons-yes').css('color', 'green');
 
                     // Update description text
@@ -109,7 +109,7 @@ jQuery(document).ready(function ($) {
                     $licenseInput.val(response.data.license_key).prop('readonly', false).prop('disabled', false).css('background-color', '');
                     $deactivateBtn.hide();
                     $activateBtn.show();
-                    $('.slk-license-status-text').text('inactive').removeClass('slk-status-active').addClass('slk-status-inactive');
+                    $('.slk-license-status-text').text(slk_license_vars.strings.inactive).removeClass('slk-status-active').addClass('slk-status-inactive');
                     $('.slk-license-status-icon').removeClass('dashicons-yes').addClass('dashicons-minus').css('color', '#999');
 
                     // Update description text
@@ -153,7 +153,7 @@ jQuery(document).ready(function ($) {
                         $licenseInput.val('').prop('readonly', false).prop('disabled', false).css('background-color', '');
                         $deactivateBtn.hide();
                         $activateBtn.show();
-                        $('.slk-license-status-text').text('inactive').removeClass('slk-status-active').addClass('slk-status-inactive');
+                        $('.slk-license-status-text').text(slk_license_vars.strings.inactive).removeClass('slk-status-active').addClass('slk-status-inactive');
                         $('.slk-license-status-icon').removeClass('dashicons-yes').addClass('dashicons-minus').css('color', '#999');
                         $('.description').text(slk_license_vars.strings.inactive_desc);
                         $('.slk-activations-row').hide();
