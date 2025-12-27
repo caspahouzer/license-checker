@@ -65,7 +65,7 @@ class LicenseChecker
         // Add page to reorder list to make it last.
         add_filter('slk_license_manager_last_menu_items', [$this, 'add_to_last_items']);
 
-        add_action('plugins_loaded', [$this, 'load_textdomain']);
+        add_action('init', [$this, 'load_textdomain']);
     }
 
     /**
