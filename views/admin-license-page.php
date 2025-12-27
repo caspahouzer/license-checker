@@ -18,7 +18,7 @@ if (! defined('ABSPATH')) {
     exit;
 }
 ?>
-<div class="cpt-license-manager">
+<div class="slk-license-checker-container">
     <!-- Message Container for AJAX -->
     <div id="slk-license-message" style="display: none; margin-bottom: 15px;"></div>
 
@@ -28,16 +28,16 @@ if (! defined('ABSPATH')) {
         </div>
     <?php endif; ?>
 
-    <div class="cpt-license-info" style="margin-bottom: 20px;">
+    <div class="slk-license-checker-info" style="margin-bottom: 20px;">
         <p class="description">
             <?php
             /* translators: %s: Plugin name. */
-            printf(esc_html__('Manage your %s license. Activate your license to receive updates and support.', 'slk-cpt-table-engine'), '<strong>' . esc_html(SLK_PLUGIN_NAME) . '</strong>');
+            esc_html__('Manage your license. Activate your license to receive updates and support.', 'slk-license-checker');
             ?>
         </p>
     </div>
 
-    <form method="post" action="" class="cpt-license-form" onsubmit="return false;">
+    <form method="post" action="" class="slk-license-checker-form" onsubmit="return false;">
         <?php wp_nonce_field(\SLK\LicenseChecker\LicenseAdminPage::NONCE_ACTION, \SLK\LicenseChecker\LicenseAdminPage::NONCE_FIELD); ?>
 
         <table class="form-table" role="presentation">
@@ -45,7 +45,7 @@ if (! defined('ABSPATH')) {
                 <!-- License Key -->
                 <tr>
                     <th scope="row">
-                        <label for="license_key"><?php esc_html_e('License Key', 'slk-cpt-table-engine'); ?></label>
+                        <label for="license_key"><?php esc_html_e('License Key', 'slk-license-checker'); ?></label>
                     </th>
                     <td>
                         <div style="display: flex; gap: 10px; align-items: flex-start;">
@@ -70,7 +70,7 @@ if (! defined('ABSPATH')) {
                                 name="license_key"
                                 class="regular-text code"
                                 value="<?php echo esc_attr($display_key); ?>"
-                                placeholder="<?php esc_attr_e('Enter your license key', 'slk-cpt-table-engine'); ?>"
+                                placeholder="<?php esc_attr_e('Enter your license key', 'slk-license-checker'); ?>"
                                 style="flex: 1; <?php echo $is_active ? 'background-color: #f0f0f1;' : ''; ?>"
                                 <?php echo $is_active ? 'readonly disabled' : ''; ?> />
 
@@ -81,7 +81,7 @@ if (! defined('ABSPATH')) {
                                 class="button button-primary"
                                 style="<?php echo $is_active ? '' : 'display: none;'; ?>">
                                 <span class="dashicons dashicons-lock" style="vertical-align: middle; margin-top: 3px;"></span>
-                                <?php esc_html_e('Deactivate', 'slk-cpt-table-engine'); ?>
+                                <?php esc_html_e('Deactivate', 'slk-license-checker'); ?>
                             </button>
 
                             <!-- Activate Button -->
@@ -91,7 +91,7 @@ if (! defined('ABSPATH')) {
                                 class="button button-primary"
                                 style="<?php echo $is_active ? 'display: none;' : ''; ?>">
                                 <span class="dashicons dashicons-unlock" style="vertical-align: middle; margin-top: 3px;"></span>
-                                <?php esc_html_e('Activate', 'slk-cpt-table-engine'); ?>
+                                <?php esc_html_e('Activate', 'slk-license-checker'); ?>
                             </button>
 
                             <span class="spinner slk-spinner" style="float: none; margin-top: 5px;"></span>
@@ -99,9 +99,9 @@ if (! defined('ABSPATH')) {
                         <p class="description">
                             <?php
                             if ($is_active) {
-                                esc_html_e('Your license is active. Click "Deactivate" to change or remove the license.', 'slk-cpt-table-engine');
+                                esc_html_e('Your license is active. Click "Deactivate" to change or remove the license.', 'slk-license-checker');
                             } else {
-                                esc_html_e('Enter the license key you received after purchase.', 'slk-cpt-table-engine');
+                                esc_html_e('Enter the license key you received after purchase.', 'slk-license-checker');
                             }
                             ?>
                         </p>
@@ -111,13 +111,13 @@ if (! defined('ABSPATH')) {
                 <!-- License Status -->
                 <tr>
                     <th scope="row">
-                        <?php esc_html_e('Status', 'slk-cpt-table-engine'); ?>
+                        <?php esc_html_e('Status', 'slk-license-checker'); ?>
                     </th>
                     <td>
                         <?php
                         $status_icon = 'dashicons-minus';
                         $status_color = '#999';
-                        $status_text = __('Not Activated', 'slk-cpt-table-engine');
+                        $status_text = __('Not Activated', 'slk-license-checker');
                         $status_class = 'slk-status-inactive';
 
                         if ($license_status === 'active') {
@@ -145,7 +145,7 @@ if (! defined('ABSPATH')) {
                 <!-- Activations -->
                 <tr class="slk-activations-row" style="<?php echo ($license_status === 'active') ? '' : 'display: none;'; ?>">
                     <th scope="row">
-                        <?php esc_html_e('Activations', 'slk-cpt-table-engine'); ?>
+                        <?php esc_html_e('Activations', 'slk-license-checker'); ?>
                     </th>
                     <td>
                         <?php
@@ -163,33 +163,33 @@ if (! defined('ABSPATH')) {
 
     <hr />
 
-    <div class="cpt-license-help" style="margin-top: 30px;">
-        <h3><?php esc_html_e('Need Help?', 'slk-cpt-table-engine'); ?></h3>
+    <div class="slk-license-checker-help" style="margin-top: 30px;">
+        <h3><?php esc_html_e('Need Help?', 'slk-license-checker'); ?></h3>
         <ul>
             <li>
-                <strong><?php esc_html_e('Where can I find my license key?', 'slk-cpt-table-engine'); ?></strong><br />
+                <strong><?php esc_html_e('Where can I find my license key?', 'slk-license-checker'); ?></strong><br />
                 <?php
                 printf(
                     /* translators: %s: website link */
-                    esc_html__('Your license key was sent to you via email after purchase. You can also find it in your account on our %s.', 'slk-cpt-table-engine'),
-                    '<a href="https://slk-communications.de/account/" target="_blank" rel="noopener noreferrer">' . esc_html__('website', 'slk-cpt-table-engine') . '</a>'
+                    esc_html__('Your license key was sent to you via email after purchase. You can also find it in your account on our %s.', 'slk-license-checker'),
+                    '<a href="https://slk-communications.de/account/" target="_blank" rel="noopener noreferrer">' . esc_html__('website', 'slk-license-checker') . '</a>'
                 );
                 ?>
             </li>
             <li>
-                <strong><?php esc_html_e('How many sites can I activate?', 'slk-cpt-table-engine'); ?></strong><br />
-                <?php esc_html_e('This depends on your license type. Check your purchase confirmation email or contact support for details.', 'slk-cpt-table-engine'); ?>
+                <strong><?php esc_html_e('How many sites can I activate?', 'slk-license-checker'); ?></strong><br />
+                <?php esc_html_e('This depends on your license type. Check your purchase confirmation email or contact support for details.', 'slk-license-checker'); ?>
             </li>
             <li>
-                <strong><?php esc_html_e('What happens if I deactivate my license?', 'slk-cpt-table-engine'); ?></strong><br />
-                <?php esc_html_e('Deactivating frees up an activation slot so you can use it on another site. The plugin will continue to work but you won\'t receive updates.', 'slk-cpt-table-engine'); ?>
+                <strong><?php esc_html_e('What happens if I deactivate my license?', 'slk-license-checker'); ?></strong><br />
+                <?php esc_html_e('Deactivating frees up an activation slot so you can use it on another site. The plugin will continue to work but you won\'t receive updates.', 'slk-license-checker'); ?>
             </li>
             <li>
-                <strong><?php esc_html_e('Support', 'slk-cpt-table-engine'); ?></strong><br />
+                <strong><?php esc_html_e('Support', 'slk-license-checker'); ?></strong><br />
                 <?php
                 printf(
                     /* translators: %s: support URL */
-                    esc_html__('For support, please visit %s', 'slk-cpt-table-engine'),
+                    esc_html__('For support, please visit %s', 'slk-license-checker'),
                     '<a href="https://slk-communications.de/" target="_blank" rel="noopener noreferrer">https://slk-communications.de/</a>'
                 );
                 ?>
@@ -199,22 +199,22 @@ if (! defined('ABSPATH')) {
 </div>
 
 <style>
-    .cpt-license-manager {
+    .slk-license-checker-container {
         max-width: 800px;
     }
 
-    .cpt-license-form .button .dashicons {
+    .slk-license-checker-form .button .dashicons {
         font-size: 16px;
         width: 16px;
         height: 16px;
     }
 
-    .cpt-license-help ul {
+    .slk-license-checker-help ul {
         list-style: disc;
         margin-left: 20px;
     }
 
-    .cpt-license-help li {
+    .slk-license-checker-help li {
         margin-bottom: 15px;
     }
 </style>

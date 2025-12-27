@@ -94,7 +94,7 @@ class LicenseHelper
         if ($response_code < 200 || $response_code >= 300) {
             $error_message = isset($data['message'])
                 ? sanitize_text_field($data['message'])
-                : sprintf(__('API request failed with status code: %d', 'slk-cpt-table-engine'), $response_code);
+                : sprintf(__('API request failed with status code: %d', 'slk-license-checker'), $response_code);
 
             self::log('API returned error status', ['code' => $response_code, 'message' => $error_message, 'data' => $data]);
 
@@ -110,7 +110,7 @@ class LicenseHelper
             return [
                 'success' => false,
                 'data'    => null,
-                'message' => __('Failed to parse API response.', 'slk-cpt-table-engine'),
+                'message' => __('Failed to parse API response.', 'slk-license-checker'),
             ];
         }
 
@@ -119,15 +119,20 @@ class LicenseHelper
         return $data;
     }
 
-    public static function delete_license_data(): void
+    public static function delete_license_data(string $option_prefix = ''): void
     {
-        delete_option(LicenseChecker::OPTION_LICENSE_KEY);
-        delete_option(LicenseChecker::OPTION_ACTIVATION_HASH);
-        delete_option(LicenseChecker::OPTION_LICENSE_STATUS);
-        delete_option(LicenseChecker::OPTION_LICENSE_COUNTS);
-        delete_transient(LicenseChecker::TRANSIENT_LICENSE_VALIDATION);
+        // If no prefix provided, use the default SLK license manager prefix
+        if (empty($option_prefix)) {
+            $option_prefix = 'slk_license_manager';
+        }
 
-        self::log('License data deleted');
+        delete_option($option_prefix . '_license_key');
+        delete_option($option_prefix . '_activation_hash');
+        delete_option($option_prefix . '_license_status');
+        delete_option($option_prefix . '_license_counts');
+        delete_transient($option_prefix . '_license_validation');
+
+        self::log('License data deleted', ['prefix' => $option_prefix]);
     }
 
     /**
@@ -147,7 +152,7 @@ class LicenseHelper
             return [
                 'success' => false,
                 'data'    => null,
-                'message' => __('License key is required.', 'slk-cpt-table-engine'),
+                'message' => __('License key is required.', 'slk-license-checker'),
             ];
         }
 
@@ -184,7 +189,7 @@ class LicenseHelper
             return [
                 'success' => false,
                 'data'    => null,
-                'message' => __('License key and activation hash are required.', 'slk-cpt-table-engine'),
+                'message' => __('License key and activation hash are required.', 'slk-license-checker'),
             ];
         }
 
@@ -218,7 +223,7 @@ class LicenseHelper
             return [
                 'success' => false,
                 'data'    => null,
-                'message' => __('License key is required.', 'slk-cpt-table-engine'),
+                'message' => __('License key is required.', 'slk-license-checker'),
             ];
         }
 
@@ -251,7 +256,7 @@ class LicenseHelper
             return [
                 'success' => false,
                 'data'    => null,
-                'message' => __('License key is required.', 'slk-cpt-table-engine'),
+                'message' => __('License key is required.', 'slk-license-checker'),
             ];
         }
 

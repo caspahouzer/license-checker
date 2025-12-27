@@ -33,22 +33,23 @@ class LicenseChecker
      */
     private static ?LicenseChecker $instance = null;
 
+    private string $text_domain;
+    private string $option_prefix;
+
     /**
-     * WordPress option keys.
+     * Validation interval constant.
      */
-    public const OPTION_LICENSE_KEY = 'cpt_table_engine_license_key';
-    public const OPTION_ACTIVATION_HASH = 'cpt_table_engine_activation_hash';
-    public const OPTION_LICENSE_STATUS = 'cpt_table_engine_license_status';
-    public const OPTION_LICENSE_COUNTS = 'cpt_table_engine_license_counts';
-    public const OPTION_LICENSE_CREDS = 'cpt_table_engine_license_creds';
-    public const TRANSIENT_LICENSE_VALIDATION = 'cpt_table_engine_license_validation';
     private const VALIDATION_INTERVAL = 12 * HOUR_IN_SECONDS; // 12 hours
 
     /**
      * Private constructor to prevent direct instantiation.
      */
-    private function __construct()
+    private function __construct($text_domain = '')
     {
+        $this->text_domain = $text_domain;
+        // Generate option prefix from text_domain (e.g., 'my-plugin' => 'my_plugin_license_manager')
+        $this->option_prefix = str_replace('-', '_', $text_domain) . '_license_checker';
+
         // Hook into admin_init to check license validation.
         add_action('admin_init', [$this, 'maybe_validate_license']);
 
@@ -57,6 +58,52 @@ class LicenseChecker
 
         // Enqueue scripts.
         add_action('admin_enqueue_scripts', [$this, 'enqueue_scripts']);
+
+        // Add admin menu page.
+        add_action('slk_license_manager_admin_menu', [$this, 'add_admin_menu'], 10, 1);
+
+        // Add page to reorder list to make it last.
+        add_filter('slk_license_manager_last_menu_items', [$this, 'add_to_last_items']);
+    }
+
+    /**
+     * Get the admin menu slug for this license checker instance.
+     *
+     * @return string
+     */
+    private function get_admin_menu_slug(): string
+    {
+        return str_replace('_', '-', $this->option_prefix);
+    }
+
+    /**
+     * Add the license checker page slug to the list of items to be moved to the end of the menu.
+     *
+     * @param array $slugs Array of slugs.
+     * @return array
+     */
+    public function add_to_last_items(array $slugs): array
+    {
+        $slugs[] = $this->get_admin_menu_slug();
+        return $slugs;
+    }
+
+    /**
+     * Add admin menu page.
+     *
+     * @param string $parent_slug The parent menu slug.
+     * @return void
+     */
+    public function add_admin_menu(string $parent_slug): void
+    {
+        add_submenu_page(
+            $parent_slug,
+            __('License', 'slk-license-manager'),
+            __('License', 'slk-license-manager'),
+            'manage_options',
+            $this->get_admin_menu_slug(),
+            [$this, 'render_license_form']
+        );
     }
 
     /**
@@ -87,13 +134,73 @@ class LicenseChecker
      *
      * @return LicenseChecker
      */
-    public static function instance(): LicenseChecker
+    public static function instance($text_domain): LicenseChecker
     {
         if (null === self::$instance) {
-            self::$instance = new self();
+            self::$instance = new self($text_domain);
         }
 
         return self::$instance;
+    }
+
+    /**
+     * Get the license key option name.
+     *
+     * @return string
+     */
+    private function get_option_key(): string
+    {
+        return $this->option_prefix . '_license_key';
+    }
+
+    /**
+     * Get the activation hash option name.
+     *
+     * @return string
+     */
+    private function get_option_activation_hash(): string
+    {
+        return $this->option_prefix . '_activation_hash';
+    }
+
+    /**
+     * Get the license status option name.
+     *
+     * @return string
+     */
+    private function get_option_license_status(): string
+    {
+        return $this->option_prefix . '_license_status';
+    }
+
+    /**
+     * Get the license counts option name.
+     *
+     * @return string
+     */
+    private function get_option_license_counts(): string
+    {
+        return $this->option_prefix . '_license_counts';
+    }
+
+    /**
+     * Get the license creds option name.
+     *
+     * @return string
+     */
+    private function get_option_license_creds(): string
+    {
+        return $this->option_prefix . '_license_creds';
+    }
+
+    /**
+     * Get the license validation transient name.
+     *
+     * @return string
+     */
+    private function get_transient_license_validation(): string
+    {
+        return $this->option_prefix . '_license_validation';
     }
 
     /**
@@ -123,7 +230,7 @@ class LicenseChecker
             return [
                 'success' => false,
                 'data'    => null,
-                'message' => __('Invalid API response: No data returned.', 'slk-cpt-table-engine'),
+                'message' => __('Invalid API response: No data returned.', 'slk-license-checker'),
             ];
         }
 
@@ -131,7 +238,7 @@ class LicenseChecker
         if (isset($response['data']['success']) && $response['data']['success'] === false) {
             $error_msg = isset($response['data']['message'])
                 ? $response['data']['message']
-                : __('License activation was rejected by the API.', 'slk-cpt-table-engine');
+                : __('License activation was rejected by the API.', 'slk-license-checker');
 
             self::log('Activation rejected by API', $response['data']);
             return [
@@ -145,7 +252,7 @@ class LicenseChecker
         if (isset($response['data']['data']['errors']) && !empty($response['data']['data']['errors'])) {
             // Extract error message from the errors array.
             $errors = $response['data']['data']['errors'];
-            $error_msg = __('License activation failed.', 'slk-cpt-table-engine');
+            $error_msg = __('License activation failed.', 'slk-license-checker');
 
             // Get the first error message.
             foreach ($errors as $error_key => $error_messages) {
@@ -164,14 +271,14 @@ class LicenseChecker
         }
 
         // Store license data.
-        update_option(self::OPTION_LICENSE_KEY, sanitize_text_field($license_key));
-        update_option(self::OPTION_LICENSE_STATUS, 'active');
+        update_option($this->get_option_key(), sanitize_text_field($license_key));
+        update_option($this->get_option_license_status(), 'active');
 
         self::log('License status set to active');
 
         // Store activation hash if provided.
         if (isset($response['activation_hash'])) {
-            update_option(self::OPTION_ACTIVATION_HASH, sanitize_text_field($response['activation_hash']));
+            update_option($this->get_option_activation_hash(), sanitize_text_field($response['activation_hash']));
             self::log('Activation hash stored');
         } else {
             self::log('Warning: No activation hash found in API response', $response);
@@ -194,7 +301,7 @@ class LicenseChecker
 
         return [
             'success' => true,
-            'message' => __('License activated successfully.', 'slk-cpt-table-engine'),
+            'message' => __('License activated successfully.', 'slk-license-checker'),
         ];
     }
 
@@ -205,7 +312,7 @@ class LicenseChecker
      */
     public function get_license_counts(): ?array
     {
-        return get_option(self::OPTION_LICENSE_COUNTS, null);
+        return get_option($this->get_option_license_counts(), null);
     }
 
     /**
@@ -226,7 +333,7 @@ class LicenseChecker
                 'activated' => (int) $data['timesActivated'],
                 'limit'     => (int) $data['timesActivatedMax'],
             ];
-            update_option(self::OPTION_LICENSE_COUNTS, $counts);
+            update_option($this->get_option_license_counts(), $counts);
             self::log('License counts updated', $counts);
         }
     }
@@ -254,7 +361,7 @@ class LicenseChecker
             // API might return success:true but contain errors in data.
             if (isset($response['data']['data']['errors']) && !empty($response['data']['data']['errors'])) {
                 $errors = $response['data']['data']['errors'];
-                $error_msg = __('Deactivation failed.', 'slk-cpt-table-engine');
+                $error_msg = __('Deactivation failed.', 'slk-license-checker');
 
                 foreach ($errors as $error_key => $error_messages) {
                     if (is_array($error_messages) && !empty($error_messages)) {
@@ -272,7 +379,7 @@ class LicenseChecker
             }
 
             // Clear license data.
-            LicenseHelper::delete_license_data();
+            LicenseHelper::delete_license_data($this->option_prefix);
 
             self::log('License deactivated, token deleted, transient cleared');
         } else {
@@ -299,7 +406,7 @@ class LicenseChecker
             return [
                 'success' => false,
                 'data'    => null,
-                'message' => __('Activation hash is required.', 'slk-cpt-table-engine'),
+                'message' => __('Activation hash is required.', 'slk-license-checker'),
             ];
         }
 
@@ -312,7 +419,7 @@ class LicenseChecker
             // Update status based on validation result.
             // API returns 'success' => true if valid.
             $is_valid = isset($response['data']['success']) && $response['data']['success'];
-            update_option(self::OPTION_LICENSE_STATUS, $is_valid ? 'active' : 'invalid');
+            update_option($this->get_option_license_status(), $is_valid ? 'active' : 'invalid');
 
             self::log('License validation result', ['is_valid' => $is_valid, 'status_set' => $is_valid ? 'active' : 'invalid']);
 
@@ -356,7 +463,7 @@ class LicenseChecker
      */
     public function get_license_key(): string
     {
-        return (string) get_option(self::OPTION_LICENSE_KEY, '');
+        return (string) get_option($this->get_option_key(), '');
     }
 
     /**
@@ -366,7 +473,7 @@ class LicenseChecker
      */
     public function get_activation_hash(): string
     {
-        return (string) get_option(self::OPTION_ACTIVATION_HASH, '');
+        return (string) get_option($this->get_option_activation_hash(), '');
     }
 
     /**
@@ -376,7 +483,7 @@ class LicenseChecker
      */
     public function get_license_status(): string
     {
-        return (string) get_option(self::OPTION_LICENSE_STATUS, '');
+        return (string) get_option($this->get_option_license_status(), '');
     }
 
     /**
@@ -386,7 +493,8 @@ class LicenseChecker
      */
     public static function is_active(): bool
     {
-        return (string) get_option(self::OPTION_LICENSE_STATUS, '') === 'active';
+        // Since is_active is static, we need to use the legacy option key for backward compatibility
+        return (string) get_option('slk_license_manager_license_status', '') === 'active';
     }
 
     /**
@@ -396,7 +504,7 @@ class LicenseChecker
      */
     private function schedule_validation(): void
     {
-        set_transient(self::TRANSIENT_LICENSE_VALIDATION, time(), self::VALIDATION_INTERVAL);
+        set_transient($this->get_transient_license_validation(), time(), self::VALIDATION_INTERVAL);
         self::log('Validation transient set for ' . self::VALIDATION_INTERVAL . ' seconds');
     }
 
@@ -416,7 +524,7 @@ class LicenseChecker
         }
 
         // Check if transient exists.
-        $last_validation = get_transient(self::TRANSIENT_LICENSE_VALIDATION);
+        $last_validation = get_transient($this->get_transient_license_validation());
 
         self::log('Auto-validation check', ['transient_exists' => ($last_validation !== false), 'last_validation' => $last_validation]);
 
@@ -446,15 +554,16 @@ class LicenseChecker
     {
         // Only load on our settings page.
         $screen = get_current_screen();
-        if (!$screen || strpos($screen->id, 'slk-cpt-table-engine') === false) {
+        $expected_screen_id = str_replace('_', '-', $this->option_prefix);
+        if (!str_contains($screen->id, $expected_screen_id)) {
             return;
         }
 
         wp_enqueue_script(
             'slk-license-checker',
-            CPT_TABLE_ENGINE_URL . 'modules/LicenseChecker/assets/js/license-checker.js',
+            SLK_LICENSE_CHECKER_URL . 'modules/LicenseChecker/assets/js/license-checker.js',
             ['jquery'],
-            CPT_TABLE_ENGINE_VERSION,
+            SLK_LICENSE_CHECKER_VERSION,
             true
         );
 
@@ -464,11 +573,11 @@ class LicenseChecker
             'status'   => $this->get_license_status(),
             'domain'   => parse_url(home_url(), PHP_URL_HOST),
             'strings'  => [
-                'enter_key'         => __('Please enter a license key.', 'slk-cpt-table-engine'),
-                'confirm_deactivate' => __('Are you sure you want to deactivate this license?', 'slk-cpt-table-engine'),
-                'network_error'     => __('Network error. Please try again.', 'slk-cpt-table-engine'),
-                'active_desc'       => __('Your license is active. Click "Deactivate" to change or remove the license.', 'slk-cpt-table-engine'),
-                'inactive_desc'     => __('Enter the license key you received after purchase.', 'slk-cpt-table-engine'),
+                'enter_key'         => __('Please enter a license key.', 'slk-license-checker'),
+                'confirm_deactivate' => __('Are you sure you want to deactivate this license?', 'slk-license-checker'),
+                'network_error'     => __('Network error. Please try again.', 'slk-license-checker'),
+                'active_desc'       => __('Your license is active. Click "Deactivate" to change or remove the license.', 'slk-license-checker'),
+                'inactive_desc'     => __('Enter the license key you received after purchase.', 'slk-license-checker'),
             ],
         ]);
     }
@@ -482,12 +591,12 @@ class LicenseChecker
     {
         // Verify nonce.
         if (!check_ajax_referer('slk_license_nonce', 'security', false)) {
-            wp_send_json_error(['message' => __('Security check failed.', 'slk-cpt-table-engine')]);
+            wp_send_json_error(['message' => __('Security check failed.', 'slk-license-checker')]);
         }
 
         // Check capabilities.
         if (!current_user_can('manage_options')) {
-            wp_send_json_error(['message' => __('Permission denied.', 'slk-cpt-table-engine')]);
+            wp_send_json_error(['message' => __('Permission denied.', 'slk-license-checker')]);
         }
 
         $method = isset($_POST['method']) ? sanitize_text_field(wp_unslash($_POST['method'])) : '';
@@ -495,7 +604,7 @@ class LicenseChecker
         if ($method === 'activate') {
             $license_key = isset($_POST['license_key']) ? sanitize_text_field(wp_unslash($_POST['license_key'])) : '';
             if (empty($license_key)) {
-                wp_send_json_error(['message' => __('License key is required.', 'slk-cpt-table-engine')]);
+                wp_send_json_error(['message' => __('License key is required.', 'slk-license-checker')]);
             }
 
             $response = $this->activate_license($license_key);
@@ -512,7 +621,7 @@ class LicenseChecker
                 $usage = $counts ? sprintf('%d / %d', $counts['activated'], $counts['limit']) : '';
 
                 wp_send_json_success([
-                    'message'    => __('License activated successfully!', 'slk-cpt-table-engine'),
+                    'message'    => __('License activated successfully!', 'slk-license-checker'),
                     'masked_key' => $masked_key,
                     'usage'      => $usage
                 ]);
@@ -523,19 +632,19 @@ class LicenseChecker
             $activation_hash = $this->get_activation_hash();
 
             if (empty($activation_hash)) {
-                wp_send_json_error(['message' => __('No activation hash found.', 'slk-cpt-table-engine')]);
+                wp_send_json_error(['message' => __('No activation hash found.', 'slk-license-checker')]);
             }
 
             $license_key = $this->get_license_key();
             if (!$license_key) {
-                wp_send_json_error(['message' => __('No license key found.', 'slk-cpt-table-engine')]);
+                wp_send_json_error(['message' => __('No license key found.', 'slk-license-checker')]);
             }
 
             $response = $this->deactivate_license($license_key, $activation_hash);
 
             if ($response['success']) {
                 wp_send_json_success([
-                    'message'     => __('License deactivated successfully!', 'slk-cpt-table-engine'),
+                    'message'     => __('License deactivated successfully!', 'slk-license-checker'),
                     'license_key' => $this->get_license_key() // Return full key so user can edit it
                 ]);
             } else {
@@ -545,7 +654,7 @@ class LicenseChecker
             $license_key = $this->get_license_key();
 
             if (empty($license_key)) {
-                wp_send_json_error(['message' => __('No license key found.', 'slk-cpt-table-engine')]);
+                wp_send_json_error(['message' => __('No license key found.', 'slk-license-checker')]);
             }
 
             // Force validation (silent=true so we don't deactivate on network error, but we DO update on API result).
@@ -560,17 +669,17 @@ class LicenseChecker
                 'status' => $status,
                 'usage'  => $usage,
                 'message' => ($status === 'active')
-                    ? __('License is active.', 'slk-cpt-table-engine')
-                    : __('License is inactive.', 'slk-cpt-table-engine')
+                    ? __('License is active.', 'slk-license-checker')
+                    : __('License is inactive.', 'slk-license-checker')
             ]);
         } else {
-            wp_send_json_error(['message' => __('Invalid method.', 'slk-cpt-table-engine')]);
+            wp_send_json_error(['message' => __('Invalid method.', 'slk-license-checker')]);
         }
     }
 
     /**
      * Render the license form.
-     * 
+     *
      * This method is called from the settings page.
      *
      * @return void
@@ -578,7 +687,7 @@ class LicenseChecker
     public function render_license_form(): void
     {
         $admin_page = new LicenseAdminPage();
-        $admin_page->render();
+        $admin_page->render($this);
     }
 
     /**

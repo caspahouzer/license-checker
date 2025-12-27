@@ -58,15 +58,14 @@ class LicenseAdminPage
      *
      * @return void
      */
-    public function render(): void
+    public function render($manager = null): void
     {
         // Check user capabilities.
         if (!current_user_can('manage_options')) {
-            wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'slk-cpt-table-engine'));
+            wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'slk-license-checker'));
         }
 
-        // Get license data.
-        $manager = LicenseChecker::instance();
+        // Get license data from the provided manager instance.
         $license_key = $manager->get_license_key();
         $activation_hash = $manager->get_activation_hash();
         $license_status = $manager->get_license_status();

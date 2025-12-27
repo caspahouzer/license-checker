@@ -1,5 +1,4 @@
 jQuery(document).ready(function ($) {
-    const $licenseForm = $('.cpt-license-form');
     const $licenseInput = $('#license_key');
     const $activateBtn = $('#slk-activate-btn');
     const $deactivateBtn = $('#slk-deactivate-btn');
