@@ -65,7 +65,7 @@ class LicenseChecker
         // Add page to reorder list to make it last.
         add_filter('slk_license_manager_last_menu_items', [$this, 'add_to_last_items']);
 
-        add_action('init', [$this, 'load_textdomain']);
+        add_action('plugins_loaded', [$this, 'load_textdomain']);
     }
 
     /**
@@ -110,8 +110,8 @@ class LicenseChecker
     {
         add_submenu_page(
             $parent_slug,
-            __('License', $this->text_domain),
-            __('License', $this->text_domain),
+            __('License', 'slk-license-checker'),
+            __('License', 'slk-license-checker'),
             'manage_options',
             $this->get_admin_menu_slug(),
             [$this, 'render_license_form']
@@ -242,7 +242,7 @@ class LicenseChecker
             return [
                 'success' => false,
                 'data'    => null,
-                'message' => __('Invalid API response: No data returned.', $this->text_domain),
+                'message' => __('Invalid API response: No data returned.', 'slk-license-checker'),
             ];
         }
 
@@ -250,7 +250,7 @@ class LicenseChecker
         if (isset($response['data']['success']) && $response['data']['success'] === false) {
             $error_msg = isset($response['data']['message'])
                 ? $response['data']['message']
-                : __('License activation was rejected by the API.', $this->text_domain);
+                : __('License activation was rejected by the API.', 'slk-license-checker');
 
             self::log('Activation rejected by API', $response['data']);
             return [
@@ -264,7 +264,7 @@ class LicenseChecker
         if (isset($response['data']['data']['errors']) && !empty($response['data']['data']['errors'])) {
             // Extract error message from the errors array.
             $errors = $response['data']['data']['errors'];
-            $error_msg = __('License activation failed.', $this->text_domain);
+            $error_msg = __('License activation failed.', 'slk-license-checker');
 
             // Get the first error message.
             foreach ($errors as $error_key => $error_messages) {
@@ -313,7 +313,7 @@ class LicenseChecker
 
         return [
             'success' => true,
-            'message' => __('License activated successfully.', $this->text_domain),
+            'message' => __('License activated successfully.', 'slk-license-checker'),
         ];
     }
 
@@ -373,7 +373,7 @@ class LicenseChecker
             // API might return success:true but contain errors in data.
             if (isset($response['data']['data']['errors']) && !empty($response['data']['data']['errors'])) {
                 $errors = $response['data']['data']['errors'];
-                $error_msg = __('Deactivation failed.', $this->text_domain);
+                $error_msg = __('Deactivation failed.', 'slk-license-checker');
 
                 foreach ($errors as $error_key => $error_messages) {
                     if (is_array($error_messages) && !empty($error_messages)) {
@@ -418,7 +418,7 @@ class LicenseChecker
             return [
                 'success' => false,
                 'data'    => null,
-                'message' => __('Activation hash is required.', $this->text_domain),
+                'message' => __('Activation hash is required.', 'slk-license-checker'),
             ];
         }
 
@@ -592,14 +592,14 @@ class LicenseChecker
             'status'   => $this->get_license_status(),
             'domain'   => parse_url(home_url(), PHP_URL_HOST),
             'strings'  => [
-                'enter_key'         => __('Please enter a license key.', $this->text_domain),
-                'confirm_deactivate' => __('Are you sure you want to deactivate this license?', $this->text_domain),
-                'network_error'     => __('Network error. Please try again.', $this->text_domain),
-                'active_desc'       => __('Your license is active. Click "Deactivate" to change or remove the license.', $this->text_domain),
-                'inactive_desc'     => __('Enter the license key you received after purchase.', $this->text_domain),
-                'active'            => __('Active', $this->text_domain),
-                'inactive'          => __('Inactive', $this->text_domain),
-                'invalid'           => __('Invalid', $this->text_domain),
+                'enter_key'         => __('Please enter a license key.', 'slk-license-checker'),
+                'confirm_deactivate' => __('Are you sure you want to deactivate this license?', 'slk-license-checker'),
+                'network_error'     => __('Network error. Please try again.', 'slk-license-checker'),
+                'active_desc'       => __('Your license is active. Click "Deactivate" to change or remove the license.', 'slk-license-checker'),
+                'inactive_desc'     => __('Enter the license key you received after purchase.', 'slk-license-checker'),
+                'active'            => __('Active', 'slk-license-checker'),
+                'inactive'          => __('Inactive', 'slk-license-checker'),
+                'invalid'           => __('Invalid', 'slk-license-checker'),
             ],
         ]);
     }
@@ -613,12 +613,12 @@ class LicenseChecker
     {
         // Verify nonce.
         if (!check_ajax_referer('slk_license_nonce', 'security', false)) {
-            wp_send_json_error(['message' => __('Security check failed.', $this->text_domain)]);
+            wp_send_json_error(['message' => __('Security check failed.', 'slk-license-checker')]);
         }
 
         // Check capabilities.
         if (!current_user_can('manage_options')) {
-            wp_send_json_error(['message' => __('Permission denied.', $this->text_domain)]);
+            wp_send_json_error(['message' => __('Permission denied.', 'slk-license-checker')]);
         }
 
         $method = isset($_POST['method']) ? sanitize_text_field(wp_unslash($_POST['method'])) : '';
@@ -626,7 +626,7 @@ class LicenseChecker
         if ($method === 'activate') {
             $license_key = isset($_POST['license_key']) ? sanitize_text_field(wp_unslash($_POST['license_key'])) : '';
             if (empty($license_key)) {
-                wp_send_json_error(['message' => __('License key is required.', $this->text_domain)]);
+                wp_send_json_error(['message' => __('License key is required.', 'slk-license-checker')]);
             }
 
             $response = $this->activate_license($license_key);
@@ -643,7 +643,7 @@ class LicenseChecker
                 $usage = $counts ? sprintf('%d / %d', $counts['activated'], $counts['limit']) : '';
 
                 wp_send_json_success([
-                    'message'    => __('License activated successfully!', $this->text_domain),
+                    'message'    => __('License activated successfully!', 'slk-license-checker'),
                     'masked_key' => $masked_key,
                     'usage'      => $usage
                 ]);
@@ -654,19 +654,19 @@ class LicenseChecker
             $activation_hash = $this->get_activation_hash();
 
             if (empty($activation_hash)) {
-                wp_send_json_error(['message' => __('No activation hash found.', $this->text_domain)]);
+                wp_send_json_error(['message' => __('No activation hash found.', 'slk-license-checker')]);
             }
 
             $license_key = $this->get_license_key();
             if (!$license_key) {
-                wp_send_json_error(['message' => __('No license key found.', $this->text_domain)]);
+                wp_send_json_error(['message' => __('No license key found.', 'slk-license-checker')]);
             }
 
             $response = $this->deactivate_license($license_key, $activation_hash);
 
             if ($response['success']) {
                 wp_send_json_success([
-                    'message'     => __('License deactivated successfully!', $this->text_domain),
+                    'message'     => __('License deactivated successfully!', 'slk-license-checker'),
                     'license_key' => $this->get_license_key() // Return full key so user can edit it
                 ]);
             } else {
@@ -676,7 +676,7 @@ class LicenseChecker
             $license_key = $this->get_license_key();
 
             if (empty($license_key)) {
-                wp_send_json_error(['message' => __('No license key found.', $this->text_domain)]);
+                wp_send_json_error(['message' => __('No license key found.', 'slk-license-checker')]);
             }
 
             // Force validation (silent=true so we don't deactivate on network error, but we DO update on API result).
@@ -691,11 +691,11 @@ class LicenseChecker
                 'status' => $status,
                 'usage'  => $usage,
                 'message' => ($status === 'active')
-                    ? __('License is active.', $this->text_domain)
-                    : __('License is inactive.', $this->text_domain)
+                    ? __('License is active.', 'slk-license-checker')
+                    : __('License is inactive.', 'slk-license-checker')
             ]);
         } else {
-            wp_send_json_error(['message' => __('Invalid method.', $this->text_domain)]);
+            wp_send_json_error(['message' => __('Invalid method.', 'slk-license-checker')]);
         }
     }
 
