@@ -33,7 +33,10 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
         private static ?LicenseChecker $instance = null;
 
         private string $version = '1.0.0';
+
         private string $option_prefix;
+
+        private string $parent_slug = '';
 
         /**
          * Validation interval constant.
@@ -93,6 +96,7 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
          */
         public function add_admin_menu(string $parent_slug): void
         {
+            $this->parent_slug = $parent_slug;
             // Trigger action for plugins to register their submenu
             // This allows external plugins to control menu registration
             do_action('slk_register_license_submenu', $parent_slug, $this);
@@ -102,8 +106,8 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
                 $this->register_submenu($parent_slug);
             }
 
-            // Move License menu to the end
-            $this->reorder_submenu_to_end($parent_slug);
+            // Move License menu to the end - hooked to admin_menu with low priority
+            add_action('admin_menu', [$this, 'reorder_submenu_to_end'], 999);
 
             // Register active menu handler
             $this->register_active_menu_handler();
@@ -123,7 +127,7 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
                 __('License', 'slk-license-checker'),
                 'manage_options',
                 $this->get_admin_menu_slug(),
-                [$this, 'render_license_form']
+                [$this, 'render_license_form'],
             );
 
             do_action('slk_register_license_submenu_done_' . $this->option_prefix);
@@ -135,25 +139,27 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
          * @param string $parent_slug The parent menu slug.
          * @return void
          */
-        private function reorder_submenu_to_end(string $parent_slug): void
+        public function reorder_submenu_to_end(): void
         {
             global $submenu;
-            if (isset($submenu[$parent_slug])) {
+            // dd($submenu, $this->parent_slug, $this->option_prefix);
+            $slug = str_replace('_', '-', $this->option_prefix);
+            if (!empty($this->parent_slug) && isset($submenu[$slug])) {
                 $menu_slug = $this->get_admin_menu_slug();
                 $item = null;
-
                 // Find and remove our item
-                foreach ($submenu[$parent_slug] as $key => $sub_item) {
-                    if ($sub_item[4] === $menu_slug) {
+                foreach ($submenu[$slug] as $key => $sub_item) {
+
+                    if ($sub_item[2] === $menu_slug) {
                         $item = $sub_item;
-                        unset($submenu[$parent_slug][$key]);
+                        unset($submenu[$slug][$key]);
                         break;
                     }
                 }
 
                 // Re-add it at the end
                 if ($item !== null) {
-                    $submenu[$parent_slug][] = $item;
+                    $submenu[$slug][] = $item;
                 }
             }
         }
@@ -165,7 +171,7 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
          */
         private function register_active_menu_handler(): void
         {
-            add_action('admin_menu', function() {
+            add_action('admin_menu', function () {
                 global $submenu_file;
                 $current_page = $_GET['page'] ?? '';
 
