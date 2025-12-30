@@ -60,9 +60,6 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
             // Add admin menu page.
             add_action('slk_license_manager_admin_menu', [$this, 'add_admin_menu'], 10, 1);
 
-            // Add page to reorder list to make it last.
-            add_filter('slk_license_manager_last_menu_items', [$this, 'add_to_last_items']);
-
             add_action('plugins_loaded', [$this, 'load_textdomain']);
         }
 
@@ -87,18 +84,6 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
         }
 
         /**
-         * Add the license checker page slug to the list of items to be moved to the end of the menu.
-         *
-         * @param array $slugs Array of slugs.
-         * @return array
-         */
-        public function add_to_last_items(array $slugs): array
-        {
-            $slugs[] = $this->get_admin_menu_slug();
-            return $slugs;
-        }
-
-        /**
          * Add admin menu page.
          *
          * @param string $parent_slug The parent menu slug.
@@ -114,6 +99,27 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
                 $this->get_admin_menu_slug(),
                 [$this, 'render_license_form']
             );
+
+            // Move this submenu item to the end (after all other items)
+            global $submenu;
+            if (isset($submenu[$parent_slug])) {
+                $menu_slug = $this->get_admin_menu_slug();
+                $item = null;
+
+                // Find and remove our item
+                foreach ($submenu[$parent_slug] as $key => $sub_item) {
+                    if ($sub_item[4] === $menu_slug) {
+                        $item = $sub_item;
+                        unset($submenu[$parent_slug][$key]);
+                        break;
+                    }
+                }
+
+                // Re-add it at the end
+                if ($item !== null) {
+                    $submenu[$parent_slug][] = $item;
+                }
+            }
         }
 
         /**
