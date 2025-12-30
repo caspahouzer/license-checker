@@ -17,8 +17,6 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
-define('SLK_LICENSE_CHECKER_VERSION', '1.0.0');
-
 /**
  * License Manager class.
  * 
@@ -33,7 +31,7 @@ class LicenseChecker
      */
     private static ?LicenseChecker $instance = null;
 
-    private string $text_domain;
+    private string $version = '1.0.0';
     private string $option_prefix;
 
     /**
@@ -46,7 +44,6 @@ class LicenseChecker
      */
     private function __construct($text_domain = 'slk-license-checker')
     {
-        $this->text_domain = $text_domain;
         // Generate option prefix from text_domain (e.g., 'my-plugin' => 'my_plugin_license_manager')
         $this->option_prefix = str_replace('-', '_', $text_domain) . '_license_checker';
 
@@ -575,14 +572,14 @@ class LicenseChecker
             'slk-license-checker',
             plugin_dir_url(__FILE__) . 'assets/css/license-checker.css',
             [],
-            SLK_LICENSE_CHECKER_VERSION
+            $this->version
         );
 
         wp_enqueue_script(
             'slk-license-checker',
             plugin_dir_url(__FILE__) . 'assets/js/license-checker.js',
             ['jquery'],
-            SLK_LICENSE_CHECKER_VERSION,
+            $this->version,
             true
         );
 
