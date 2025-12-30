@@ -51,14 +51,16 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
             // Hook into admin_init to check license validation.
             add_action('admin_init', [$this, 'maybe_validate_license']);
 
-            // Register AJAX actions.
-            add_action('wp_ajax_slk_content_bitch_manage_license', [$this, 'handle_ajax_request']);
+            // Register AJAX actions with dynamic action name based on plugin
+            $ajax_action = str_replace('_license_checker', '_manage_license', $this->option_prefix);
+            add_action('wp_ajax_' . $ajax_action, [$this, 'handle_ajax_request']);
 
             // Enqueue scripts.
             add_action('admin_enqueue_scripts', [$this, 'enqueue_scripts']);
 
-            // Add admin menu page.
-            add_action('slk_license_manager_admin_menu', [$this, 'add_admin_menu'], 10, 1);
+            // Add admin menu page - use dynamic hook based on plugin text_domain
+            $admin_menu_hook = str_replace('_license_checker', '_admin_menu', $this->option_prefix);
+            add_action($admin_menu_hook, [$this, 'add_admin_menu'], 10, 1);
 
             add_action('plugins_loaded', [$this, 'load_textdomain']);
         }
