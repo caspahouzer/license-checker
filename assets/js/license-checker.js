@@ -43,7 +43,7 @@ jQuery(document).ready(function ($) {
             type: 'POST',
             dataType: 'json',
             data: {
-                action: 'slk_manage_license',
+                action: 'slk_content_bitch_manage_license',
                 security: slk_license_vars.nonce,
                 method: 'activate',
                 license_key: licenseKey,
@@ -96,7 +96,7 @@ jQuery(document).ready(function ($) {
             type: 'POST',
             dataType: 'json',
             data: {
-                action: 'slk_manage_license',
+                action: 'slk_content_bitch_manage_license',
                 security: slk_license_vars.nonce,
                 method: 'deactivate'
             },
@@ -135,7 +135,7 @@ jQuery(document).ready(function ($) {
             type: 'POST',
             dataType: 'json',
             data: {
-                action: 'slk_manage_license',
+                action: 'slk_content_bitch_manage_license',
                 security: slk_license_vars.nonce,
                 method: 'check_status'
             },

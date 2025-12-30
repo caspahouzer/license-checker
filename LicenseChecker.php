@@ -52,7 +52,7 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
             add_action('admin_init', [$this, 'maybe_validate_license']);
 
             // Register AJAX actions.
-            add_action('wp_ajax_slk_manage_license', [$this, 'handle_ajax_request']);
+            add_action('wp_ajax_slk_content_bitch_manage_license', [$this, 'handle_ajax_request']);
 
             // Enqueue scripts.
             add_action('admin_enqueue_scripts', [$this, 'enqueue_scripts']);
@@ -84,12 +84,36 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
         }
 
         /**
-         * Add admin menu page.
+         * Add admin menu page - orchestrates hook-based menu registration.
          *
          * @param string $parent_slug The parent menu slug.
          * @return void
          */
         public function add_admin_menu(string $parent_slug): void
+        {
+            // Trigger action for plugins to register their submenu
+            // This allows external plugins to control menu registration
+            do_action('slk_register_license_submenu', $parent_slug, $this);
+
+            // Fallback: If nothing was registered, register it ourselves
+            if (!did_action('slk_register_license_submenu_done_' . $this->option_prefix)) {
+                $this->register_submenu($parent_slug);
+            }
+
+            // Move License menu to the end
+            $this->reorder_submenu_to_end($parent_slug);
+
+            // Register active menu handler
+            $this->register_active_menu_handler();
+        }
+
+        /**
+         * Register the submenu page (can be called from hook or directly).
+         *
+         * @param string $parent_slug The parent menu slug.
+         * @return void
+         */
+        public function register_submenu(string $parent_slug): void
         {
             add_submenu_page(
                 $parent_slug,
@@ -100,7 +124,17 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
                 [$this, 'render_license_form']
             );
 
-            // Move this submenu item to the end (after all other items)
+            do_action('slk_register_license_submenu_done_' . $this->option_prefix);
+        }
+
+        /**
+         * Reorder submenu item to appear at the end.
+         *
+         * @param string $parent_slug The parent menu slug.
+         * @return void
+         */
+        private function reorder_submenu_to_end(string $parent_slug): void
+        {
             global $submenu;
             if (isset($submenu[$parent_slug])) {
                 $menu_slug = $this->get_admin_menu_slug();
@@ -120,6 +154,23 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
                     $submenu[$parent_slug][] = $item;
                 }
             }
+        }
+
+        /**
+         * Register handler for active menu highlighting.
+         *
+         * @return void
+         */
+        private function register_active_menu_handler(): void
+        {
+            add_action('admin_menu', function() {
+                global $submenu_file;
+                $current_page = $_GET['page'] ?? '';
+
+                if ($current_page === $this->get_admin_menu_slug()) {
+                    $submenu_file = $this->get_admin_menu_slug();
+                }
+            }, 100);  // Priority 100 - after all other hooks
         }
 
         /**
@@ -505,12 +556,14 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
         /**
          * Check if license is active.
          *
+         * @param string $text_domain Optional text domain for the plugin instance. Defaults to 'slk-license-manager'.
          * @return bool True if active, false otherwise.
          */
-        public static function is_active(): bool
+        public static function is_active($text_domain = 'slk-license-manager'): bool
         {
-            // Since is_active is static, we need to use the legacy option key for backward compatibility
-            return (string) get_option('slk_license_manager_license_status', '') === 'active';
+            // Get the instance for the specified text domain and check its license status
+            $instance = self::instance($text_domain);
+            return (string) get_option($instance->get_option_license_status(), '') === 'active';
         }
 
         /**
