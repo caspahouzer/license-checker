@@ -458,8 +458,8 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
 
             if ($response['success']) {
                 // Update status based on validation result.
-                // API returns 'success' => true if valid.
-                $is_valid = isset($response['data']['success']) && $response['data']['success'];
+                // API returns 'valid' => true if license is valid.
+                $is_valid = isset($response['valid']) && $response['valid'];
                 update_option($this->get_option_license_status(), $is_valid ? 'active' : 'invalid');
 
                 // Update license counts.
