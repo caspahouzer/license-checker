@@ -108,11 +108,26 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
                 $this->register_submenu($parent_slug);
             }
 
+            // Add this License menu slug to the list of items that should appear at the end
+            add_filter('slk_license_manager_last_menu_items', [$this, 'add_to_last_menu_items']);
+
             // Move License menu to the end - hooked to admin_menu with low priority
             add_action('admin_menu', [$this, 'reorder_submenu_to_end'], 999);
 
             // Register active menu handler
             $this->register_active_menu_handler();
+        }
+
+        /**
+         * Add this License menu item to the list of items that should appear at the end.
+         *
+         * @param array $items The list of last menu item slugs.
+         * @return array Modified list with License menu slug added.
+         */
+        public function add_to_last_menu_items(array $items): array
+        {
+            $items[] = $this->get_admin_menu_slug();
+            return $items;
         }
 
         /**
