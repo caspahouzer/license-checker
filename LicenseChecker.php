@@ -61,8 +61,11 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
         /**
          * Private constructor to prevent direct instantiation.
          */
-        private function __construct($text_domain = 'slk-license-checker')
+        private function __construct($text_domain = '')
         {
+            if (empty($text_domain)) {
+                throw new \InvalidArgumentException('Text domain must be provided in LicenseChecker constructor.');
+            }
             // Generate option prefix from text_domain (e.g., 'my-plugin' => 'my_plugin_license_manager')
             $this->option_prefix = str_replace('-', '_', $text_domain) . '_license_checker';
 
@@ -221,7 +224,7 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
          * @param string $text_domain The text domain (defaults to 'slk-license-checker').
          * @return LicenseChecker
          */
-        public static function instance($text_domain = 'slk-license-checker'): LicenseChecker
+        public static function instance($text_domain = ''): LicenseChecker
         {
             if (!isset(self::$instances[$text_domain])) {
                 self::$instances[$text_domain] = new self($text_domain);
@@ -541,10 +544,10 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
          * @param string $text_domain Optional text domain for the plugin instance. Defaults to 'slk-license-manager'.
          * @return bool True if active, false otherwise.
          */
-        public static function is_active($text_domain = null): bool
+        public static function is_active($text_domain = ''): bool
         {
-            if ($text_domain === null) {
-                throw new \InvalidArgumentException('Text domain must be provided.');
+            if (empty($text_domain)) {
+                throw new \InvalidArgumentException('Text domain must be provided in active method.');
             }
             // Get the instance for the specified text domain and check its license status
             $instance = self::instance($text_domain);
