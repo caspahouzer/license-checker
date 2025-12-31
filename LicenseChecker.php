@@ -549,7 +549,7 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
          */
         public static function is_active(): bool
         {
-            if (empty($text_domain)) {
+            if (empty(self::$text_domain)) {
                 throw new \InvalidArgumentException('Text domain must be provided in active method.');
             }
             // Get the instance for the specified text domain and check its license status
