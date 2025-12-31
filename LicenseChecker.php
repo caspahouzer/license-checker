@@ -26,11 +26,11 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
     class LicenseChecker
     {
         /**
-         * Singleton instance.
+         * Singleton instances - one per text domain.
          *
-         * @var LicenseChecker|null
+         * @var array<string, LicenseChecker>
          */
-        private static ?LicenseChecker $instance = null;
+        private static array $instances = [];
 
         private string $version = '1.0.0';
 
@@ -97,12 +97,14 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
         public function add_admin_menu(string $parent_slug): void
         {
             $this->parent_slug = $parent_slug;
+
             // Trigger action for plugins to register their submenu
             // This allows external plugins to control menu registration
             do_action('slk_register_license_submenu', $parent_slug, $this);
 
             // Fallback: If nothing was registered, register it ourselves
-            if (!did_action('slk_register_license_submenu_done_' . $this->option_prefix)) {
+            $submenu_done_hook = 'slk_register_license_submenu_done_' . $this->option_prefix;
+            if (!did_action($submenu_done_hook)) {
                 $this->register_submenu($parent_slug);
             }
 
@@ -121,12 +123,13 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
          */
         public function register_submenu(string $parent_slug): void
         {
+            $menu_slug = $this->get_admin_menu_slug();
             add_submenu_page(
                 $parent_slug,
                 __('License', 'slk-license-checker'),
                 __('License', 'slk-license-checker'),
                 'manage_options',
-                $this->get_admin_menu_slug(),
+                $menu_slug,
                 [$this, 'render_license_form'],
             );
 
@@ -144,6 +147,7 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
             global $submenu;
             // dd($submenu, $this->parent_slug, $this->option_prefix);
             $slug = str_replace('_', '-', $this->option_prefix);
+
             if (!empty($this->parent_slug) && isset($submenu[$slug])) {
                 $menu_slug = $this->get_admin_menu_slug();
                 $item = null;
@@ -182,40 +186,18 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
         }
 
         /**
-         * Log debug messages when SLK_DEBUG is enabled.
+         * Get singleton instance for a specific text domain.
          *
-         * @param string $message Log message.
-         * @param mixed  $data    Optional data to log.
-         * @return void
-         */
-        private static function log(string $message, $data = null): void
-        {
-            if (!defined('SLK_DEBUG') || !SLK_DEBUG) {
-                return;
-            }
-
-            $log_message = '[SLK License Checker] ' . $message;
-
-            if ($data !== null) {
-                // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-                error_log($log_message . ' | Data: ' . wp_json_encode($data));
-            }
-            // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-            error_log($log_message);
-        }
-
-        /**
-         * Get singleton instance.
-         *
+         * @param string $text_domain The text domain (defaults to 'slk-license-checker').
          * @return LicenseChecker
          */
         public static function instance($text_domain = 'slk-license-checker'): LicenseChecker
         {
-            if (null === self::$instance) {
-                self::$instance = new self($text_domain);
+            if (!isset(self::$instances[$text_domain])) {
+                self::$instances[$text_domain] = new self($text_domain);
             }
 
-            return self::$instance;
+            return self::$instances[$text_domain];
         }
 
         /**
@@ -286,22 +268,16 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
          */
         public function activate_license(string $license_key): array
         {
-            self::log('Activating license', ['key_length' => strlen($license_key)]);
-
             // Call API.
             $response = LicenseHelper::activate_license($license_key);
 
-            self::log('Activation API response', $response);
-
             // Check if API request succeeded AND activation was successful.
             if (!$response['success']) {
-                self::log('Activation failed: API request failed', $response);
                 return $response;
             }
 
             // Verify the response contains valid data.
             if (!isset($response['data']) || empty($response['data'])) {
-                self::log('Activation failed: Empty or invalid response data', $response);
                 return [
                     'success' => false,
                     'data'    => null,
@@ -315,7 +291,6 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
                     ? $response['data']['message']
                     : __('License activation was rejected by the API.', 'slk-license-checker');
 
-                self::log('Activation rejected by API', $response['data']);
                 return [
                     'success' => false,
                     'data'    => $response['data'],
@@ -337,7 +312,6 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
                     }
                 }
 
-                self::log('Activation failed: Errors found in response', ['errors' => $errors, 'message' => $error_msg]);
                 return [
                     'success' => false,
                     'data'    => $response['data'],
@@ -349,14 +323,9 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
             update_option($this->get_option_key(), sanitize_text_field($license_key));
             update_option($this->get_option_license_status(), 'active');
 
-            self::log('License status set to active');
-
             // Store activation hash if provided.
             if (isset($response['activation_hash'])) {
                 update_option($this->get_option_activation_hash(), sanitize_text_field($response['activation_hash']));
-                self::log('Activation hash stored');
-            } else {
-                self::log('Warning: No activation hash found in API response', $response);
             }
 
             // Update license counts.
@@ -409,7 +378,6 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
                     'limit'     => (int) $data['timesActivatedMax'],
                 ];
                 update_option($this->get_option_license_counts(), $counts);
-                self::log('License counts updated', $counts);
             }
         }
 
@@ -421,15 +389,8 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
          */
         public function deactivate_license(string $license_key, string $activation_hash): array
         {
-            self::log('Deactivating license', [
-                'license_key_length' => strlen($license_key),
-                'hash_length'       => strlen($activation_hash)
-            ]);
-
             // Call API.
             $response = LicenseHelper::deactivate_license($license_key, $activation_hash);
-
-            self::log('Deactivation API response', $response);
 
             if ($response['success']) {
                 // Check for API errors in nested data (LMFWC format).
@@ -445,7 +406,6 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
                         }
                     }
 
-                    self::log('Deactivation failed: Errors found in response', ['errors' => $errors, 'message' => $error_msg]);
                     return [
                         'success' => false,
                         'data'    => $response['data'],
@@ -455,10 +415,6 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
 
                 // Clear license data.
                 LicenseHelper::delete_license_data($this->option_prefix);
-
-                self::log('License deactivated, token deleted, transient cleared');
-            } else {
-                self::log('Deactivation failed', $response);
             }
 
             return $response;
@@ -473,11 +429,8 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
          */
         public function validate_license(string $license_key, bool $silent = false): array
         {
-            self::log('Validating license', ['key_length' => strlen($license_key), 'silent_mode' => $silent]);
-
             $activation_hash = $this->get_activation_hash();
             if (empty($activation_hash)) {
-                self::log('Validation failed: empty activation hash');
                 return [
                     'success' => false,
                     'data'    => null,
@@ -488,17 +441,11 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
             // Call API.
             $response = LicenseHelper::validate_license($license_key, $activation_hash);
 
-            self::log('Validation API response', $response);
-
             if ($response['success']) {
                 // Update status based on validation result.
                 // API returns 'success' => true if valid.
                 $is_valid = isset($response['data']['success']) && $response['data']['success'];
                 update_option($this->get_option_license_status(), $is_valid ? 'active' : 'invalid');
-
-                self::log('License validation result', ['is_valid' => $is_valid, 'status_set' => $is_valid ? 'active' : 'invalid']);
-
-                self::log('License validation result', ['is_valid' => $is_valid, 'status_set' => $is_valid ? 'active' : 'invalid']);
 
                 // Update license counts.
                 // If validation response doesn't have counts, fetch details.
@@ -521,9 +468,6 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
                 if ($silent) {
                     // Reset transient to try again in 12 hours.
                     $this->schedule_validation();
-                    self::log('Silent validation failed, keeping current status and resetting transient');
-                } else {
-                    self::log('Validation failed (non-silent mode)', $response);
                 }
                 // Otherwise, let the admin page handle the error display.
             }
@@ -582,12 +526,11 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
         private function schedule_validation(): void
         {
             set_transient($this->get_transient_license_validation(), time(), self::VALIDATION_INTERVAL);
-            self::log('Validation transient set for ' . self::VALIDATION_INTERVAL . ' seconds');
         }
 
         /**
          * Automatically validate license if transient has expired.
-         * 
+         *
          * This method is hooked to admin_init and runs every 12 hours.
          * If the API fails to respond, the license remains active.
          *
@@ -603,21 +546,14 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
             // Check if transient exists.
             $last_validation = get_transient($this->get_transient_license_validation());
 
-            self::log('Auto-validation check', ['transient_exists' => ($last_validation !== false), 'last_validation' => $last_validation]);
-
             // If transient doesn't exist, validate the license.
             if (false === $last_validation) {
                 $license_status = $this->get_license_status();
 
-                self::log('Transient expired, checking license', ['has_key' => !empty($license_key), 'status' => $license_status]);
-
                 // Only auto-validate if there's a license key and status is active.
                 if (!empty($license_key) && $license_status === 'active') {
-                    self::log('Starting automatic background validation');
                     // Validate in silent mode - preserves active status if API fails.
                     $this->validate_license($license_key, true);
-                } else {
-                    self::log('Skipping auto-validation', ['reason' => empty($license_key) ? 'no_key' : 'not_active']);
                 }
             }
         }

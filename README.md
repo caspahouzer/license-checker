@@ -51,14 +51,11 @@ if (file_exists(__DIR__ . '/modules/LicenseChecker/LicenseChecker.php')) {
 
 ### 2. Hook-basierte Menü-Registrierung
 
-Das Modul triggert automatisch den `slk_register_license_submenu` Hook. Registriere einen Handler in deinem Admin-Setup:
+Das Modul triggert automatisch den `TEXTDOMAIN_WITH_UNDERSCORES_admin_menu` Hook. Registriere einen Handler in deinem Admin-Setup:
 
 ```php
 // Im admin_menu Hook oder später
-add_action('slk_register_license_submenu', function($parent_slug, $license_manager) {
-    // Dein Plugin registriert seine License-Seite selbst
-    $license_manager->register_submenu($parent_slug);
-}, 10, 2);
+do_action('slk_content_bitch_admin_menu', $parent_slug);
 ```
 
 **Oder einfacher:** Lasse das Fallback-System es automatisch machen - wenn kein Handler registriert wurde, macht es sich selbst!
