@@ -58,6 +58,8 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
          */
         private const VALIDATION_INTERVAL = 12 * HOUR_IN_SECONDS; // 12 hours
 
+        private static ?string $text_domain = '';
+
         /**
          * Private constructor to prevent direct instantiation.
          */
@@ -226,6 +228,7 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
          */
         public static function instance($text_domain = ''): LicenseChecker
         {
+            self::$text_domain = $text_domain;
             if (!isset(self::$instances[$text_domain])) {
                 self::$instances[$text_domain] = new self($text_domain);
             }
@@ -544,13 +547,13 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
          * @param string $text_domain Optional text domain for the plugin instance. Defaults to 'slk-license-manager'.
          * @return bool True if active, false otherwise.
          */
-        public static function is_active($text_domain = ''): bool
+        public static function is_active(): bool
         {
             if (empty($text_domain)) {
                 throw new \InvalidArgumentException('Text domain must be provided in active method.');
             }
             // Get the instance for the specified text domain and check its license status
-            $instance = self::instance($text_domain);
+            $instance = self::instance(self::$text_domain);
             return (string) get_option($instance->get_option_license_status(), '') === 'active';
         }
 
