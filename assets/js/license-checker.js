@@ -43,7 +43,7 @@ jQuery(document).ready(function ($) {
             type: 'POST',
             dataType: 'json',
             data: {
-                action: 'slk_content_bitch_manage_license',
+                action: slk_license_vars.action,
                 security: slk_license_vars.nonce,
                 method: 'activate',
                 license_key: licenseKey,
@@ -60,6 +60,7 @@ jQuery(document).ready(function ($) {
                     $deactivateBtn.show();
                     $('.slk-license-status-text').text(slk_license_vars.strings.active).removeClass('slk-status-inactive').addClass('slk-status-active');
                     $('.slk-license-status-icon').removeClass('dashicons-minus').addClass('dashicons-yes').css('color', 'green');
+                    $('.slk-status-indicator').removeClass('inactive invalid').addClass('active');
 
                     // Update description text
                     $('.description').text(slk_license_vars.strings.active_desc);
@@ -96,7 +97,7 @@ jQuery(document).ready(function ($) {
             type: 'POST',
             dataType: 'json',
             data: {
-                action: 'slk_content_bitch_manage_license',
+                action: slk_license_vars.action,
                 security: slk_license_vars.nonce,
                 method: 'deactivate'
             },
@@ -111,6 +112,7 @@ jQuery(document).ready(function ($) {
                     $activateBtn.show();
                     $('.slk-license-status-text').text(slk_license_vars.strings.inactive).removeClass('slk-status-active').addClass('slk-status-inactive');
                     $('.slk-license-status-icon').removeClass('dashicons-yes').addClass('dashicons-minus').css('color', '#999');
+                    $('.slk-status-indicator').removeClass('active invalid').addClass('inactive');
 
                     // Update description text
                     $('.description').text(slk_license_vars.strings.inactive_desc);
@@ -149,12 +151,15 @@ jQuery(document).ready(function ($) {
 
                     // If status changed to inactive (e.g. revoked), update UI
                     if (response.data.status !== 'active') {
+                        var newStatus = response.data.status;
+
                         // Reset UI to inactive state
                         $licenseInput.val('').prop('readonly', false).prop('disabled', false).css('background-color', '');
                         $deactivateBtn.hide();
                         $activateBtn.show();
-                        $('.slk-license-status-text').text(slk_license_vars.strings.inactive).removeClass('slk-status-active').addClass('slk-status-inactive');
+                        $('.slk-license-status-text').text(slk_license_vars.strings[newStatus] || slk_license_vars.strings.inactive).removeClass('slk-status-active').addClass('slk-status-inactive');
                         $('.slk-license-status-icon').removeClass('dashicons-yes').addClass('dashicons-minus').css('color', '#999');
+                        $('.slk-status-indicator').removeClass('active').addClass(newStatus);
                         $('.description').text(slk_license_vars.strings.inactive_desc);
                         $('.slk-activations-row').hide();
 

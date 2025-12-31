@@ -602,8 +602,12 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
                 true
             );
 
+            // Calculate AJAX action dynamically based on plugin
+            $ajax_action = str_replace('_license_checker', '_manage_license', $this->option_prefix);
+
             wp_localize_script('slk-license-checker', 'slk_license_vars', [
                 'ajax_url' => admin_url('admin-ajax.php'),
+                'action'   => $ajax_action,
                 'nonce'    => wp_create_nonce('slk_license_nonce'),
                 'status'   => $this->get_license_status(),
                 'domain'   => parse_url(home_url(), PHP_URL_HOST),
