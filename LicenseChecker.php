@@ -698,12 +698,12 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
                 $activation_hash = $this->get_activation_hash();
 
                 if (empty($activation_hash)) {
-                    wp_send_json_error(['message' => __('No activation hash found.', 'slk-license-checker')]);
+                    wp_send_json_error(['action' => 'deactivate', 'message' => __('No activation hash found.', 'slk-license-checker')]);
                 }
 
                 $license_key = $this->get_license_key();
                 if (!$license_key) {
-                    wp_send_json_error(['message' => __('No license key found.', 'slk-license-checker')]);
+                    wp_send_json_error(['action' => 'deactivate', 'message' => __('No license key found.', 'slk-license-checker')]);
                 }
 
                 $response = $this->deactivate_license($license_key, $activation_hash);
@@ -719,8 +719,9 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
             } elseif ($method === 'check_status') {
                 $license_key = $this->get_license_key();
 
+                error_log('SLK License Check Status: License Key: ' . $this->get_option_key() . ' = ' . $license_key);
                 if (empty($license_key)) {
-                    wp_send_json_error(['message' => __('No license key found.', 'slk-license-checker')]);
+                    wp_send_json_error(['action' => 'check_status', 'key' => $this->get_option_key(), 'message' => __('No license key found.', 'slk-license-checker')]);
                 }
 
                 // Force validation (silent=true so we don't deactivate on network error, but we DO update on API result).

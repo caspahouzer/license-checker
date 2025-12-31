@@ -137,7 +137,7 @@ jQuery(document).ready(function ($) {
             type: 'POST',
             dataType: 'json',
             data: {
-                action: 'slk_content_bitch_manage_license',
+                action: slk_license_vars.action,
                 security: slk_license_vars.nonce,
                 method: 'check_status'
             },
