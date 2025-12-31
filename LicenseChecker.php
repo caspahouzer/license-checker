@@ -32,10 +32,25 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
          */
         private static array $instances = [];
 
+        /**
+         * Plugin version.
+         *
+         * @var string
+         */
         private string $version = '1.0.0';
 
+        /**
+         * Option prefix for this instance.
+         *
+         * @var string
+         */
         private string $option_prefix;
 
+        /**
+         * Parent menu slug.
+         *
+         * @var string
+         */
         private string $parent_slug = '';
 
         /**
@@ -526,8 +541,11 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
          * @param string $text_domain Optional text domain for the plugin instance. Defaults to 'slk-license-manager'.
          * @return bool True if active, false otherwise.
          */
-        public static function is_active($text_domain = 'slk-license-manager'): bool
+        public static function is_active($text_domain = null): bool
         {
+            if ($text_domain === null) {
+                throw new \InvalidArgumentException('Text domain must be provided.');
+            }
             // Get the instance for the specified text domain and check its license status
             $instance = self::instance($text_domain);
             return (string) get_option($instance->get_option_license_status(), '') === 'active';
