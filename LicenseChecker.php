@@ -12,6 +12,8 @@ declare(strict_types=1);
 
 namespace SLK\LicenseChecker;
 
+use SLK\LicenseChecker\LemonSqueezy\LemonSqueezyStrategy;
+
 // Exit if accessed directly.
 if (! defined('ABSPATH')) {
     exit;
@@ -31,6 +33,13 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
          * @var array<string, LicenseChecker>
          */
         private static array $instances = [];
+
+        /**
+         * License API strategy (LemonSqueezy).
+         *
+         * @var LemonSqueezyStrategy
+         */
+        private LemonSqueezyStrategy $strategy;
 
         /**
          * Plugin version.
@@ -71,6 +80,9 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
             // Generate option prefix from text_domain (e.g., 'my-plugin' => 'my_plugin_license_manager')
             $this->option_prefix = str_replace('-', '_', $text_domain) . '_license_checker';
 
+            // Initialize the license strategy (LemonSqueezy or Default).
+            $this->init_strategy();
+
             // Hook into admin_init to check license validation.
             add_action('admin_init', [$this, 'maybe_validate_license']);
 
@@ -85,17 +97,29 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
             $admin_menu_hook = str_replace('_license_checker', '_admin_menu', $this->option_prefix);
             add_action($admin_menu_hook, [$this, 'add_admin_menu'], 10, 1);
 
-            add_action('plugins_loaded', [$this, 'load_textdomain']);
+            // Allow plugins to register the plugin file for plugins list rendering
+            $register_renderer_hook = str_replace('_license_checker', '_register_renderer', $this->option_prefix);
+            do_action($register_renderer_hook, $this);
         }
 
         /**
-         * Load plugin textdomain.
+         * Register the plugin file for plugins list rendering.
          *
+         * This method is called via a dynamic hook so that the plugin can register its plugin file
+         * for rendering in the plugins list.
+         *
+         * @param string $plugin_file The plugin file path (e.g., 'my-plugin/my-plugin.php').
          * @return void
          */
-        public function load_textdomain(): void
+        public function register_plugins_list_renderer(string $plugin_file): void
         {
-            load_plugin_textdomain('slk-license-checker', false, plugin_dir_path(__FILE__) . 'languages');
+            if (empty($plugin_file)) {
+                return;
+            }
+
+            // Instantiate and register the plugins list renderer
+            $renderer = new LicensePluginsListRenderer($this, $plugin_file, $this->option_prefix);
+            $renderer->register_hooks();
         }
 
         /**
@@ -237,6 +261,18 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
         }
 
         /**
+         * Initialize the license strategy.
+         *
+         * Uses LemonSqueezy public License API (no authentication required).
+         *
+         * @return void
+         */
+        private function init_strategy(): void
+        {
+            $this->strategy = new LemonSqueezyStrategy();
+        }
+
+        /**
          * Get the license key option name.
          *
          * @return string
@@ -304,8 +340,8 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
          */
         public function activate_license(string $license_key): array
         {
-            // Call API.
-            $response = LicenseHelper::activate_license($license_key);
+            // Call API via the configured strategy.
+            $response = $this->strategy->activate_license($license_key);
 
             // Check if API request succeeded AND activation was successful.
             if (!$response['success']) {
@@ -370,7 +406,7 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
                 $this->update_license_counts($details['data']);
             } else {
                 // Otherwise, fetch details now to get the counts.
-                $details = LicenseHelper::get_license_details($license_key);
+                $details = $this->strategy->get_license_details($license_key);
                 if ($details['success'] && isset($details['data'])) {
                     $this->update_license_counts($details['data']);
                 }
@@ -425,8 +461,8 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
          */
         public function deactivate_license(string $license_key, string $activation_hash): array
         {
-            // Call API.
-            $response = LicenseHelper::deactivate_license($license_key, $activation_hash);
+            // Call API via the configured strategy.
+            $response = $this->strategy->deactivate_license($license_key, $activation_hash);
 
             if ($response['success']) {
                 // Check for API errors in nested data (LMFWC format).
@@ -474,8 +510,8 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
                 ];
             }
 
-            // Call API.
-            $response = LicenseHelper::validate_license($license_key, $activation_hash);
+            // Call API via the configured strategy.
+            $response = $this->strategy->validate_license($license_key, $activation_hash, $silent);
 
             if ($response['success']) {
                 // Update status based on validation result.
@@ -489,7 +525,7 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
                 $has_counts = isset($response['data']['timesActivated']) || isset($response['data']['data']['timesActivated']);
 
                 if (!$has_counts) {
-                    $details = LicenseHelper::get_license_details($license_key);
+                    $details = $this->strategy->get_license_details($license_key);
                     if ($details['success'] && isset($details['data'])) {
                         $this->update_license_counts($details['data']);
                     }
@@ -544,7 +580,9 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
         /**
          * Check if license is active.
          *
-         * @param string $text_domain Optional text domain for the plugin instance. Defaults to 'slk-license-manager'.
+         * Performs automatic validation every 12 hours against the LemonSqueezy API.
+         * If validation is not due, returns cached status.
+         *
          * @return bool True if active, false otherwise.
          */
         public static function is_active(): bool
@@ -552,9 +590,37 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
             if (empty(self::$text_domain)) {
                 throw new \InvalidArgumentException('Text domain must be provided in active method.');
             }
-            // Get the instance for the specified text domain and check its license status
+
+            // Get the instance for the specified text domain
             $instance = self::instance(self::$text_domain);
-            return (string) get_option($instance->get_option_license_status(), '') === 'active';
+
+            // Get current status from options
+            $status = (string) get_option($instance->get_option_license_status(), '');
+
+            // Only proceed if license is marked as active
+            if ($status !== 'active') {
+                return false;
+            }
+
+            // Check if validation is due (every 12 hours)
+            $validation_transient = $instance->get_transient_license_validation();
+            $last_validation = get_transient($validation_transient);
+
+            // If validation transient has expired, validate against LemonSqueezy API
+            if (false === $last_validation) {
+                $license_key = $instance->get_license_key();
+
+                // Only validate if we have a license key
+                if (!empty($license_key)) {
+                    // Validate in silent mode - preserves active status if API fails
+                    $instance->validate_license($license_key, true);
+
+                    // Get updated status after validation
+                    $status = (string) get_option($instance->get_option_license_status(), '');
+                }
+            }
+
+            return $status === 'active';
         }
 
         /**
@@ -598,16 +664,20 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
         }
 
         /**
-         * Enqueue admin scripts.
+         * Enqueue admin scripts and styles.
          *
          * @return void
          */
         public function enqueue_scripts(): void
         {
-            // Only load on our settings page.
             $screen = get_current_screen();
             $expected_screen_id = $this->get_admin_menu_slug();
-            if (!$screen || !str_contains($screen->id, $expected_screen_id)) {
+
+            // Check if we're on license settings page or plugins page
+            $is_license_page = $screen && str_contains($screen->id, $expected_screen_id);
+            $is_plugins_page = $screen && $screen->id === 'plugins';
+
+            if (!$is_license_page && !$is_plugins_page) {
                 return;
             }
 
@@ -719,9 +789,8 @@ if (! class_exists('SLK\LicenseChecker\LicenseChecker')) {
             } elseif ($method === 'check_status') {
                 $license_key = $this->get_license_key();
 
-                error_log('SLK License Check Status: License Key: ' . $this->get_option_key() . ' = ' . $license_key);
                 if (empty($license_key)) {
-                    wp_send_json_error(['action' => 'check_status', 'key' => $this->get_option_key(), 'message' => __('No license key found.', 'slk-license-checker')]);
+                    wp_send_json_error(['action' => 'check_status', 'message' => __('No license key found.', 'slk-license-checker')]);
                 }
 
                 // Force validation (silent=true so we don't deactivate on network error, but we DO update on API result).
