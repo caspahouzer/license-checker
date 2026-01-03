@@ -17,6 +17,7 @@ use SLK\LicenseChecker\LemonSqueezy\API\LemonSqueezyClient;
 use SLK\LicenseChecker\LemonSqueezy\API\ActivateLicense;
 use SLK\LicenseChecker\LemonSqueezy\API\DeactivateLicense;
 use SLK\LicenseChecker\LemonSqueezy\API\ValidateLicense;
+use SLK\LicenseChecker\LemonSqueezy\Shortcode;
 
 // Exit if accessed directly.
 if (! defined('ABSPATH')) {
@@ -73,6 +74,9 @@ if (! class_exists('SLK\LicenseChecker\LemonSqueezy\LemonSqueezyStrategy')) {
             $this->activate = new ActivateLicense($this->client);
             $this->deactivate = new DeactivateLicense($this->client);
             $this->validate = new ValidateLicense($this->client);
+
+            // Initialize shortcode.
+            (new Shortcode())->init();
         }
 
         /**

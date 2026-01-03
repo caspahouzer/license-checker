@@ -21,7 +21,6 @@ if (! defined('ABSPATH')) {
  * LemonSqueezy Configuration Manager class.
  *
  * Singleton class for managing LemonSqueezy API configuration.
- * Stores and retrieves the LemonSqueezy API key from WordPress options.
  */
 if (! class_exists('SLK\LicenseChecker\LemonSqueezy\LemonSqueezy')) {
     class LemonSqueezy
@@ -32,13 +31,6 @@ if (! class_exists('SLK\LicenseChecker\LemonSqueezy\LemonSqueezy')) {
          * @var self|null
          */
         private static ?self $instance = null;
-
-        /**
-         * WordPress option key for storing the API key.
-         *
-         * @var string
-         */
-        private const OPTION_API_KEY = 'slk_lemonsqueezy_api_key';
 
         /**
          * LemonSqueezy API base URL.
@@ -81,55 +73,6 @@ if (! class_exists('SLK\LicenseChecker\LemonSqueezy\LemonSqueezy')) {
         }
 
         /**
-         * Check if LemonSqueezy is configured.
-         *
-         * @return bool True if API key is set, false otherwise.
-         */
-        public function is_configured(): bool
-        {
-            return !empty($this->get_api_key());
-        }
-
-        /**
-         * Get the stored API key.
-         *
-         * @return string The API key, or empty string if not set.
-         */
-        public function get_api_key(): string
-        {
-            $api_key = get_option(self::OPTION_API_KEY, '');
-
-            return is_string($api_key) ? trim($api_key) : '';
-        }
-
-        /**
-         * Set the API key.
-         *
-         * @param string $api_key The API key to store.
-         * @return bool True if the option was updated, false otherwise.
-         */
-        public function set_api_key(string $api_key): bool
-        {
-            $api_key = sanitize_text_field(trim($api_key));
-
-            if (empty($api_key)) {
-                return delete_option(self::OPTION_API_KEY);
-            }
-
-            return update_option(self::OPTION_API_KEY, $api_key);
-        }
-
-        /**
-         * Delete the API key.
-         *
-         * @return bool True if the option was deleted, false otherwise.
-         */
-        public function delete_api_key(): bool
-        {
-            return delete_option(self::OPTION_API_KEY);
-        }
-
-        /**
          * Log debug messages.
          *
          * @param string $message The message to log.
@@ -138,10 +81,6 @@ if (! class_exists('SLK\LicenseChecker\LemonSqueezy\LemonSqueezy')) {
          */
         public static function log(string $message, $data = null): void
         {
-            if (!defined('SLK_DEBUG') || !SLK_DEBUG) {
-                return;
-            }
-
             $log_message = '[SLK LemonSqueezy] ' . $message;
 
             if ($data !== null) {
