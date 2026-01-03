@@ -80,12 +80,4 @@ if (! defined('ABSPATH')) {
             </div>
         </form>
     </div>
-
-    <div class="slk-help-section slk-license-card">
-        <h2><?php esc_html_e('Need Help?', 'slk-license-checker'); ?></h2>
-        <ul>
-            <li><strong><?php esc_html_e('Where can I find my license key?', 'slk-license-checker'); ?></strong><br /><?php printf(esc_html__('Your license key is available in your account on our %s.', 'slk-license-checker'), '<a href="#" target="_blank">website</a>'); ?></li>
-            <li><strong><?php esc_html_e('Having trouble?', 'slk-license-checker'); ?></strong><br /><?php printf(esc_html__('Please contact our %s for assistance.', 'slk-license-checker'), '<a href="#" target="_blank">support team</a>'); ?></li>
-        </ul>
-    </div>
 </div>
