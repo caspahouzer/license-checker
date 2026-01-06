@@ -47,8 +47,8 @@ if (! class_exists('SLK\LicenseChecker\LemonSqueezy\Shortcode')) {
         {
             $atts = shortcode_atts(
                 [
-                    'variant_id' => '',
-                    'text'       => 'Purchase',
+                    'variant_id' => 'c675a5a5-b6f1-4854-87bb-5ad89e1c8fdd',
+                    'text'       => 'Purchase now',
                 ],
                 $atts,
                 'lemonsqueezy_checkout'

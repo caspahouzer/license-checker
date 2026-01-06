@@ -20,7 +20,7 @@ if (! defined('ABSPATH')) {
 ?>
 <div class="wrap slk-license-page">
     <div class="slk-license-card">
-        <h1><?php esc_html_e('License Management', 'slk-license-checker'); ?></h1>
+        <h1><?php esc_html_e('License', 'slk-license-checker'); ?></h1>
 
         <!-- Message Container for AJAX -->
         <div id="slk-license-message" style="display: none; margin-bottom: 15px;"></div>
