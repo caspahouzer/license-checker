@@ -1,6 +1,6 @@
 {
     "name": "caspahouzer/license-checker",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "A comprehensive WordPress license checking and management module with LemonSqueezy integration, automatic validation, admin UI integration, and multi-plugin support.",
     "type": "library",
     "license": "GPL-2.0-or-later",

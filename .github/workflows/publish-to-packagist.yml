@@ -1,53 +1,60 @@
-name: Publish to Packagist on Version Change
+name: Release on Version Change
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'composer.json'
-
-permissions:
-  contents: write
+    push:
+        branches:
+            - main
 
 jobs:
-  publish:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+    release:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v3
+              with:
+                  # Fetch all history so we can get the last tag
+                  fetch-depth: 0
 
-      - name: Extract version from composer.json
-        id: version
-        run: |
-          VERSION=$(jq -r '.version' composer.json)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
-          echo "Detected version: $VERSION"
+            - name: Get Version from composer.json
+              id: get_version
+              run: |
+                  # Ensure jq is installed
+                  sudo apt-get install -y jq
+                  VERSION=$(jq -r '.version' composer.json)
+                  echo "Version in composer.json: $VERSION"
+                  echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Check if tag already exists
-        id: check_tag
-        run: |
-          if git rev-parse "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-            echo "Tag v${{ steps.version.outputs.version }} already exists"
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-            echo "Tag v${{ steps.version.outputs.version }} does not exist, will create it"
-          fi
+            - name: Get Latest Tag
+              id: get_tag
+              run: |
+                  LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+                  echo "Latest Git tag: $LATEST_TAG"
+                  echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
 
-      - name: Create and push tag
-        if: steps.check_tag.outputs.exists == 'false'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -a "v${{ steps.version.outputs.version }}" -m "Release version ${{ steps.version.outputs.version }}: Automatic release from composer.json"
-          git push origin "v${{ steps.version.outputs.version }}"
-          echo "Tag v${{ steps.version.outputs.version }} created and pushed successfully"
+            - name: Create Release if Version Changed
+              if: steps.get_version.outputs.version != '' && steps.get_tag.outputs.tag != format('v{0}', steps.get_version.outputs.version)
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  VERSION=${{ steps.get_version.outputs.version }}
+                  echo "New version detected: $VERSION. Creating release..."
 
-      - name: Tag already exists - no action needed
-        if: steps.check_tag.outputs.exists == 'true'
-        run: |
-          echo "Version v${{ steps.version.outputs.version }} is already tagged. Packagist will use existing tag."
+                  # Extract changelog for the new version
+                  CHANGELOG_ENTRY=$(awk "/## \\[$VERSION\\]/{f=1;next} /## \\[/ && f{f=0} f" CHANGELOG.md)
+
+                  if [ -z "$CHANGELOG_ENTRY" ]; then
+                    echo "Changelog entry for version $VERSION not found in CHANGELOG.md"
+                    CHANGELOG_ENTRY="No changelog found"
+                  fi
+
+                  # Create GitHub Release
+                  gh release create "v$VERSION" --notes "$CHANGELOG_ENTRY" --title "Version $VERSION"
+
+                  echo "Release v$VERSION created successfully."
+                  echo "This should trigger the Packagist update automatically."
+
+            - name: No Version Change
+              if: steps.get_version.outputs.version == '' || steps.get_tag.outputs.tag == format('v{0}', steps.get_version.outputs.version)
+              run: echo "No new version detected. Skipping release."
