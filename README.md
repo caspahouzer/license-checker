@@ -1,6 +1,6 @@
 # License Manager Module
 
-Lizenzierungsmodul mit Hook-basierter Admin-Menü-Integration für WordPress Plugins.
+License module with hook-based admin menu integration for WordPress plugins.
 
 ## Namespace
 
@@ -8,101 +8,101 @@ Lizenzierungsmodul mit Hook-basierter Admin-Menü-Integration für WordPress Plu
 
 ## Classes
 
--   **LicenseChecker** - Main singleton controller für Lizenzmanagement
--   **LicenseHelper** - API HTTP client für License-Server-Kommunikation
--   **LicenseAdminPage** - Admin interface renderer für License-Seite
+-   **LicenseChecker** - Main singleton controller for license management
+-   **LicenseHelper** - HTTP API client for license server communication
+-   **LicenseAdminPage** - Admin interface renderer for license page
 
 ## Features
 
--   ✅ Lizenzaktivierung/Deaktivierung/Validierung
--   ✅ **Automatische Validierung alle 12 Stunden** (transient-basiert)
--   ✅ REST API Integration mit dem License-Server
--   ✅ WordPress Admin UI Integration
--   ✅ Sichere Formularbearbeitung mit Nonces
--   ✅ Datenspeicherung über WordPress Options API
--   ✅ **Hook-basierte Menü-Registrierung** (neue Architektur)
--   ✅ **Separate Lizenzen pro Plugin** mit eindeutigen Option-Namen
+-   ✅ License activation/deactivation/validation
+-   ✅ **Automatic validation every 12 hours** (transient-based)
+-   ✅ REST API integration with license server
+-   ✅ WordPress admin UI integration
+-   ✅ Secure form handling with nonces
+-   ✅ Data storage via WordPress Options API
+-   ✅ **Hook-based menu registration** (new architecture)
+-   ✅ **Separate licenses per plugin** with unique option names
 
 ## API Configuration
 
 -   **Base URL:** `https://slk-communications.de/`
 -   **Endpoints:**
-    -   `POST /activate` - Lizenz aktivieren
-    -   `POST /deactivate` - Lizenz deaktivieren
-    -   `POST /validate` - Lizenz validieren
+    -   `POST /activate` - Activate license
+    -   `POST /deactivate` - Deactivate license
+    -   `POST /validate` - Validate license
 
 ## Installation & Setup
 
-### 1. LicenseChecker Instanzieren
+### 1. Instantiating LicenseChecker
 
-Im Plugin-Main-File oder Bootstrap:
+In your plugin main file or bootstrap:
 
 ```php
-// In deinem Plugin-Datei (z.B. slk-my-plugin.php)
+// In your plugin file (e.g., slk-my-plugin.php)
 if (file_exists(__DIR__ . '/modules/LicenseChecker/LicenseChecker.php')) {
     require_once __DIR__ . '/modules/LicenseChecker/LicenseChecker.php';
 
     if (class_exists('\SLK\LicenseChecker\LicenseChecker')) {
-        // Instanziere mit deinem eigenen Text-Domain
+        // Instantiate with your own text domain
         \SLK\LicenseChecker\LicenseChecker::instance('my-plugin-domain');
     }
 }
 ```
 
-### 2. Hook-basierte Menü-Registrierung
+### 2. Hook-based Menu Registration
 
-Das Modul triggert automatisch den `TEXTDOMAIN_WITH_UNDERSCORES_admin_menu` Hook. Registriere einen Handler in deinem Admin-Setup:
+The module automatically triggers the `TEXTDOMAIN_WITH_UNDERSCORES_admin_menu` hook. Register a handler in your admin setup:
 
 ```php
-// Im admin_menu Hook oder später
+// In the admin_menu hook or later
 do_action('slk_content_bitch_admin_menu', $parent_slug);
 ```
 
-**Oder einfacher:** Lasse das Fallback-System es automatisch machen - wenn kein Handler registriert wurde, macht es sich selbst!
+**Or simpler:** Let the fallback system do it automatically - if no handler is registered, it will handle it itself!
 
-## Verwendung
+## Usage
 
-### Lizenzstatus per PHP prüfen
+### Check License Status via PHP
 
 ```php
-// Prüfe Lizenz für dein Plugin
+// Check license for your plugin
 if (\SLK\LicenseChecker\LicenseChecker::is_active('my-plugin-domain')) {
-    // Lizenz ist für dein Plugin aktiv
+    // License is active for your plugin
 } else {
-    // Lizenz ist nicht aktiviert oder abgelaufen
+    // License is not activated or expired
 }
 
-// Oder nutze die Instanz direkt
+// Or use the instance directly
 $license = \SLK\LicenseChecker\LicenseChecker::instance('my-plugin-domain');
 if ($license->get_license_status() === 'active') {
-    // Dein Plugin ist lizenziert
+    // Your plugin is licensed
 }
 ```
 
-### Admin-Seite aufrufen
+### Access Admin Page
 
-Die License-Admin-Seite wird automatisch als Submenü unter dem Parent-Menü registriert:
+The license admin page is automatically registered as a submenu under the parent menu:
 
 ```
-Admin-Menü
-└── Dein Menü
-    ├── Menü-Item 1
-    ├── Menü-Item 2
-    └── License (am Ende)  ← Wird automatisch positioniert
+Admin Menu
+└── Your Menu
+    ├── Menu Item 1
+    ├── Menu Item 2
+    └── License (at the end)  ← Automatically positioned
 ```
 
-### Manuelle Registrierung (optional)
+### Manual Registration (optional)
 
-Falls du mehr Kontrolle brauchst:
+If you need more control:
 
 ```php
 $license_manager = \SLK\LicenseChecker\LicenseChecker::instance('my-plugin-domain');
 $license_manager->register_submenu('edit.php?post_type=my_cpt');
 ```
 
-## Option-Namen
+## Option Names
 
-Jedes Plugin speichert seine Lizenzdaten mit einem eindeutigen Präfix:
+Each plugin stores its license data with a unique prefix:
 
 ```
 slk_{plugin_slug}_license_checker_license_key
@@ -111,7 +111,7 @@ slk_{plugin_slug}_license_checker_activation_hash
 slk_{plugin_slug}_license_checker_license_counts
 ```
 
-**Beispiel für `slk-content-bitch`:**
+**Example for `slk-content-bitch`:**
 ```
 slk_content_bitch_license_checker_license_key
 slk_content_bitch_license_checker_license_status
@@ -119,21 +119,21 @@ slk_content_bitch_license_checker_activation_hash
 slk_content_bitch_license_checker_license_counts
 ```
 
-## Hooks & Aktionen
+## Hooks & Actions
 
 ### `slk_register_license_submenu`
 
-Triggert die Registrierung des License-Submenüs:
+Triggers license submenu registration:
 
 ```php
 do_action('slk_register_license_submenu', $parent_slug, $license_manager);
 ```
 
-**Parameter:**
-- `$parent_slug` (string) - Parent-Menü-Slug (z.B. 'edit.php?post_type=my_cpt')
-- `$license_manager` (LicenseChecker) - LicenseChecker-Instanz
+**Parameters:**
+- `$parent_slug` (string) - Parent menu slug (e.g., 'edit.php?post_type=my_cpt')
+- `$license_manager` (LicenseChecker) - LicenseChecker instance
 
-**Beispiel:**
+**Example:**
 ```php
 add_action('slk_register_license_submenu', function($parent_slug, $license_manager) {
     $license_manager->register_submenu($parent_slug);
@@ -142,93 +142,93 @@ add_action('slk_register_license_submenu', function($parent_slug, $license_manag
 
 ### `slk_register_license_submenu_done_{option_prefix}`
 
-Triggert nach erfolgreicher Submenu-Registrierung:
+Triggers after successful submenu registration:
 
 ```php
 do_action('slk_register_license_submenu_done_slk_content_bitch_license_checker');
 ```
 
-## AJAX Aktionen
+## AJAX Actions
 
-Die JavaScript-Kommunikation nutzt folgende AJAX-Aktionen (pro Plugin unterschiedlich):
+JavaScript communication uses the following AJAX actions (varies per plugin):
 
 - **slk-license-manager:** `slk_license_manager_manage_license`
 - **slk-content-bitch:** `slk_content_bitch_manage_license`
 
-Diese werden automatisch vom Modul registriert basierend auf dem Plug-in-Kontext.
+These are automatically registered by the module based on the plugin context.
 
-## Methoden der LicenseChecker Klasse
+## LicenseChecker Class Methods
 
-### Public Methoden
+### Public Methods
 
 ```php
-// Singleton-Instanz abrufen
+// Get singleton instance
 $instance = LicenseChecker::instance($text_domain = 'slk-license-checker');
 
-// Lizenz aktivieren
+// Activate license
 $result = $instance->activate_license('license-key-here');
 
-// Lizenz deaktivieren
+// Deactivate license
 $result = $instance->deactivate_license($license_key, $activation_hash);
 
-// Lizenz validieren
+// Validate license
 $result = $instance->validate_license($license_key);
 
-// Lizenzstatus abrufen ('active', 'inactive', 'invalid')
+// Get license status ('active', 'inactive', 'invalid')
 $status = $instance->get_license_status();
 
-// Aktivierungszähler abrufen
+// Get activation counts
 $counts = $instance->get_license_counts(); // ['activated' => 1, 'limit' => 5]
 
-// Admin-Menü registrieren (orchestriert Hook-basierte Registrierung)
+// Register admin menu (orchestrates hook-based registration)
 $instance->add_admin_menu($parent_slug);
 
-// Submenü direkt registrieren
+// Register submenu directly
 $instance->register_submenu($parent_slug);
 
-// Lizenz-Seite rendern (intern genutzt)
+// Render license page (used internally)
 $instance->render_license_form();
 ```
 
-### Statische Methoden
+### Static Methods
 
 ```php
-// Prüfe ob Lizenz aktiv ist (mit Plugin-Support)
+// Check if license is active (with plugin support)
 if (LicenseChecker::is_active('my-plugin-domain')) {
     // ...
 }
 
-// Prüfe für aktuelles Plugin (nutzt default)
+// Check for current plugin (uses default)
 if (LicenseChecker::is_active()) {
     // ...
 }
 ```
 
-## Architektur der Menü-Registrierung
+## Menu Registration Architecture
 
-### Hook-basiertes Design
+### Hook-based Design
 
-Die neue Architektur nutzt eine saubere Hook-basierte Struktur:
+The new architecture uses a clean hook-based structure:
 
 ```
-1. Plugin ruft do_action('slk_license_manager_admin_menu', $parent_slug) auf
+1. Plugin calls do_action('slk_license_manager_admin_menu', $parent_slug)
    ↓
-2. LicenseChecker triggert do_action('slk_register_license_submenu', $parent_slug, $this)
+2. LicenseChecker triggers do_action('slk_register_license_submenu', $parent_slug, $this)
    ↓
-3. Plugin registriert Hook-Handler für 'slk_register_license_submenu'
+3. Plugin registers hook handler for 'slk_register_license_submenu'
    ↓
-4. Hook-Handler ruft $license_manager->register_submenu($parent_slug) auf
+4. Hook handler calls $license_manager->register_submenu($parent_slug)
    ↓
-5. License-Submenü wird registriert
+5. License submenu is registered
    ↓
-6. Menu wird ans Ende verschoben (reorder_submenu_to_end)
+6. Menu is moved to the end (reorder_submenu_to_end)
    ↓
-7. Aktiver Menüpunkt wird hervorgehoben (register_active_menu_handler)
+7. Active menu item is highlighted (register_active_menu_handler)
 ```
 
-## Separate Lizenzen pro Plugin (Multi-Plugin Setup)
+## Separate Licenses per Plugin (Multi-Plugin Setup)
 
-Beide Plugins können gleichzeitig aktiv sein mit **separaten und unabhängigen Lizenzen:**
+Both plugins can be active simultaneously with **separate and independent licenses:**
 
 ```php
 // In slk-license-manager/slk-license-manager.php
@@ -237,26 +237,26 @@ Beide Plugins können gleichzeitig aktiv sein mit **separaten und unabhängigen 
 // In slk-content-bitch/slk-content-bitch.php
 \SLK\LicenseChecker\LicenseChecker::instance('slk-content-bitch');
 
-// Jedes Plugin hat seine eigene Lizenz
+// Each plugin has its own license
 if (\SLK\LicenseChecker\LicenseChecker::is_active('slk-license-manager')) {
-    // License Manager ist lizenziert
+    // License Manager is licensed
 }
 
 if (\SLK\LicenseChecker\LicenseChecker::is_active('slk-content-bitch')) {
-    // Content Bitch ist lizenziert
+    // Content Bitch is licensed
 }
 ```
 
 ## Debugging
 
-Aktiviere `SLK_DEBUG` Konstante zum Loggen:
+Enable the `SLK_DEBUG` constant for logging:
 
 ```php
 define('SLK_DEBUG', true);
 ```
 
-Logs werden über `error_log()` ausgegeben (check wp-content/debug.log).
+Logs are output via `error_log()` (check wp-content/debug.log).
 
-## Auto-Loading
+## Auto-loading
 
-Classes werden automatisch über den PSR-4 Autoloader geladen. Kein manuelles `require` nötig, außer beim initialen Laden des Moduls.
+Classes are automatically loaded via PSR-4 autoloader. No manual `require` needed, except when initially loading the module.
