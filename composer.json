@@ -3,5 +3,8 @@
         "psr-4": {
             "SLK\\LicenseChecker\\": "src/"
         }
+    },
+    "require": {
+        "caspahouzer/lemonsqueezy-api-client": "^1.3"
     }
 }
