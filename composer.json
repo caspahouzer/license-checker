@@ -1,10 +1,41 @@
 {
+    "name": "caspahouzer/license-checker",
+    "description": "A comprehensive WordPress license checking and management module with LemonSqueezy integration, automatic validation, admin UI integration, and multi-plugin support.",
+    "type": "library",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "Sebastian Klaus",
+            "email": "sebastian@slk-communications.de",
+            "role": "Developer"
+        }
+    ],
+    "homepage": "https://github.com/caspahouzer/license-checker",
+    "keywords": [
+        "wordpress",
+        "license",
+        "license-checker",
+        "license-management",
+        "lemon-squeezy",
+        "plugin",
+        "validation"
+    ],
+    "readme": "README.md",
+    "require": {
+        "php": ">=8.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5 || ^10.0",
+        "phpstan/phpstan": "^1.0"
+    },
     "autoload": {
         "psr-4": {
             "SLK\\LicenseChecker\\": "src/"
         }
     },
-    "require": {
-        "caspahouzer/lemonsqueezy-api-client": "^1.3"
-    }
+    "support": {
+        "issues": "https://github.com/caspahouzer/license-checker/issues",
+        "source": "https://github.com/caspahouzer/license-checker"
+    },
+    "minimum-stability": "stable"
 }
